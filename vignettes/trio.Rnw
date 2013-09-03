@@ -1,0 +1,1228 @@
+\documentclass[12pt]{article}
+\SweaveOpts{keep.source=TRUE, expand=FALSE}
+%\VignetteIndexEntry{Trio Logic Regression and genotypic TDT}
+%\VignetteDepends{trio}
+%\VignettePackage{trio} 
+
+\usepackage[margin=1.25in]{geometry}
+
+\usepackage{color,colordvi}
+
+\usepackage{amsmath,amstext}
+%\usepackage{psfig}
+\usepackage{natbib}
+\usepackage{graphicx}
+\RequirePackage[colorlinks=TRUE]{hyperref}
+\hypersetup{linkcolor=black, menucolor=black, urlcolor=blue, citecolor=black}
+%\usepackage[tight]{subfigure}
+%\usepackage{lscape,rotating,setspace,tabularx}
+
+\usepackage{fancyhdr}
+\usepackage{fancyvrb}
+\usepackage{setspace}
+\usepackage{verbatim}
+\usepackage{qingSweave}
+
+\newcommand{\captionfonts}{\small}
+
+
+%\setlength{\topmargin}{-15mm}
+\setlength{\parskip}{1.5ex plus0.5ex minus0.2ex}
+
+%\doublespacing
+\parindent0em
+
+
+\renewcommand{\familydefault}{cmss}
+\renewcommand{\baselinestretch}{1.5}
+
+\begin{document}
+
+\thispagestyle{empty}
+
+\bigskip
+
+\begin{center}
+
+\vspace*{3cm}
+
+{\LARGE \bf Preparing Case-Parent Trio Data\\[-6pt] and Detecting Disease-Associated\\[-6pt]
+SNPs, SNP Interactions,\\[-6pt] and  Gene-Environment Interactions\\[12pt] with \texttt{trio}}
+
+\vspace*{0.9cm}
+
+{\Large Holger Schwender, Qing Li, and Ingo Ruczinski}
+\vspace*{0.1cm}
+\end{center}
+%\doublespace
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+\section{Introduction}
+
+The \texttt{R} package \texttt{trio} contains functions for performing genotypic transmission
+disequilibrium tests (gTDTs) and corresponding score tests to test whether the distributions of individual SNPs \citep{schaid1996},
+two-way interactions of SNPs \citep{cordell2002, cordell2004}, or interactions between SNPs and binary environmental variables 
+differ between the cases, i.e.\ the children affected by a disease, and the matched pseudo-controls, i.e.\ the combinations of alleles
+that were not transmitted from the parents to their offspring, but were also possible given the parents' genotypes.
+Additionally, \texttt{trio} also comprises a function for applying the allelic TDT \citep{spielman1993} to genotype data.
+
+Moreover, \texttt{trio} provides functionalities relevant
+for the analysis of case-parent trio data with {\it trio logic
+regression} \citep{li2010}. These are, on the one hand,
+functions that aid in the transformation of the trio data from
+standard linkage files (ped format) or genotype format into objects
+suitable as input for trio logic regression, and on the other hand,
+functions for applying trio logic regression and a bagging version of trio logic regression
+to these objects.
+
+Finally, \texttt{trio} provides functions for reading in and manipulating the case-parent trio data,
+estimating LD as well as LD-blocks, and simulating case-parent trio data, where the risk of
+disease is specified by (higher order) SNP interactions. 
+
+In Section \ref{read} of this vignette, it is shown how family-based data stored in a linkage/ped file can be read into
+\texttt{R} and transformed into a format suitable for the application of the functions for performing the allelic and genotypic TDTs
+as well as the score tests. While Section \ref{testing} contains examples for the application of the gTDT functions to individual 
+SNPs, two-way SNP interactions, and gene-environment interactions, Sections \ref{allelicTDT} and \ref{score} briefly show how the allelic TDT and the 
+score tests related to the genotypic TDTs, respectively, can be used to test these factors.
+
+Section \ref{trio} is devoted to the steps relevant
+for data processing necessary to generate a matrix suitable as
+input for trio logic regression, starting from a linkage or genotype
+file, possibly containing missing data and/or Mendelian errors. We
+give some examples how missing data can be addressed using haplotype-based 
+imputation. The haplotype information can be specified by the
+user, or when this information is not readily available, automatically
+inferred. The haplotype blocks are also relevant in the delineation of
+the genotypes for the pseudo-controls, as the linkage disequilibrium
+(LD) structure observed in the parents is taken into account in this
+process. While this function is intended to generate complete case-pseudo-control 
+data as input for trio logic regression, an option to
+simply return the completed trio data is also available.
+
+In Sections \ref{triolr} and \ref{triofs}, it is shown how trio logic regression and trioFS
+\citep[trio Feature Selection;][]{schwender2011}, in which bagging with
+base learner trio logic regression is used to stabilize the search for
+relevant SNP interactions, can be applied to the data generated as described
+in Section \ref{trio}.
+
+For the estimation of the haplotype structure that might be used in the
+functions described in Section \ref{trio}, the \texttt{R} package \texttt{trio}
+also contains functions for computing and plotting the pairwise LD values
+and for detecting LD blocks. In Section \ref{getLD}, it is described how the
+pairwise values of the LD measures $D^\prime$ and $r^2$ can be computed 
+with the function \texttt{getLD}, and how the $D^\prime$ values can be employed to
+estimate haplotype blocks with the algorithm of \citet{gabriel2002}. 
+
+Finally, Section \ref{simulation} of the vignette explains in more detail how to set
+up simulations of case-parent trio data, where the risk of disease is
+specified by SNP interactions. The most time-consuming step for
+these types of simulations is the generation of mating tables and
+the respective probabilities. The mating table information, however, can
+be stored, which allows for fast simulations when replicates of the
+case-parent trio data are generated.
+
+\section{Preparing Data for the Genotypic TDTs}\label{read}
+
+\subsection{Dataframe in ped format}
+
+Case-parent trio data are typically stored in a ped file. 
+The first six columns in such a ped file, which is also referred to as linkage file, 
+identify the family structure of the data, and the
+phenotype. It is assumed that only one phenotype variable (column 6)
+is used. The object \texttt{trio.ped1}, available in the \texttt{R} package,
+is an example of a data set in ped format. It contains information for 10 SNPs
+in 100 trios. Besides the variables providing information on the
+family structure and the phenotypes (columns 1--6), each SNP is
+encoded in two variables denoting the alleles.
+
+<<>>=
+library(trio)
+data(trio.data)
+str(trio.ped1)
+trio.ped1[1:10,1:12]
+@
+
+\subsection{Reading a ped file into R}
+
+If not already available as data frame or matrix in the \texttt{R} workspace, 
+trio data can be read into \texttt{R} using the function \texttt{read.pedfile}.
+If we, for example, assume that the working directory of the current \texttt{R} session contains a file called "pedfile.ped" 
+(this file is actually not available in \texttt{trio}, we just assume that such a file exists in the working
+directory), then this file can be read into \texttt{R} by calling
+
+\begin{verbatim}
+   > ped <- read.pedfile("pedfile.ped")
+\end{verbatim}
+If the arguments \texttt{coded} and \texttt{first.row} of \texttt{read.pedfile}
+are not specified by the user, \texttt{read.pedfile} automatically tries to
+figures out how the alleles in the ped file are coded, and whether the first row contains the SNP names (\texttt{first.row = FALSE})
+or the data for the first subject (\texttt{first.row = TRUE}). In the former case, \texttt{read.pedfile} adds the SNP names
+(with extensions \texttt{.1} and \texttt{.2} to differ between the two alleles) to the respective columns of the read-in data frame. 
+
+\subsection{Transforming a data frame in ped format to a matrix in genotype format}
+
+For the applications of the functions for performing gTDTs (see Section \ref{testing}), 
+the trio data must be in a matrix in genotype format. In such a matrix,
+each columns represents a SNP, which is coded by the number of minor alleles, and each block of 3 consecutive rows contains the genotypes
+of the father, the mother, and their offspring (in this order) of one specific trio. Missing values are allowed in this matrix, and
+need to be coded by \texttt{NA}. This matrix can either be generated from a data frame in ped format by employing the function
+\texttt{ped2geno}, or more conveniently, by setting \texttt{p2g = TRUE} in \texttt{read.pedfile}. Thus, a matrix in genotype format
+might be obtained from the above ped file by calling
+
+\begin{verbatim}
+   > geno <- read.pedfile("pedfile.ped", p2g=TRUE)
+\end{verbatim}
+The output of these functions just contains the matrix in genotype format, whereas \texttt{trio.check} described in
+Section \ref{trio} additionally contains information
+about Mendelian errors. Instead of checking for Mendelian errors in \texttt{ped2geno} or \texttt{read.pedfile}, 
+such errors are removed SNP-wise in the functions for performing genotypic TDTs.
+
+If, for example, the data frame \texttt{trio.ped1} should be transformed into a
+matrix in genotype format, \texttt{ped2geno} can be applied to it. However, \texttt{ped2geno} requires unique personal IDs
+(second column of \texttt{trio.ped1}) such that we first have to combine the family ID and the personal ID (which would be automatically
+done by \texttt{read.pedfile}), and change the IDs of the fathers and mothers in columns 3 and 4 likewise.
+
+<<>>=
+trio.ped1[,2] <- paste(trio.ped1[,1], trio.ped1[,2], sep="_")
+ids <- trio.ped1[,3] != 0
+trio.ped1[ids,3] <- paste(trio.ped1[ids,1], trio.ped1[ids,3], sep="_")
+trio.ped1[ids,4] <- paste(trio.ped1[ids,1], trio.ped1[ids,4], sep="_")
+trio.ped1[1:5, 1:4]
+@
+
+Afterwards, \texttt{ped2geno} can be applied to \texttt{trio.ped1}
+
+<<>>=
+geno <- ped2geno(trio.ped1)
+geno[1:5,]
+@
+
+The matrix \texttt{trio.gen1} is the genotype matrix corresponding to
+\texttt{trio.ped1}. So the genotypes in the output of \texttt{ped2geno} are identical to
+\texttt{trio.gen1} (except for that the first two columns of \texttt{trio.gen1} contain the family ID and the personal ID). 
+
+<<>>=
+trio.gen1[1:5, 3:12]
+table(trio.gen1[,3:12] == geno)
+@
+
+\section{Genotypic TDTs}\label{testing}
+
+\subsection{Testing a Single SNP with a Genotypic TDT}
+
+A single SNP or two-way interaction can be tested with a gTDT by employing the functions \texttt{tdt}
+and \texttt{tdtGxG}. If we, for example, would like to test the first SNP in the matrix \texttt{mat.test}
+available in the \texttt{R} package \texttt{trio}, then this could be done by calling
+
+<<>>=
+tdt(mat.test[,1])
+@
+
+In this case, a conditional logistic regression is fitted, and the output of \texttt{tdt} contains the
+parameter estimate \texttt{Coef} for the SNP in this model, the odds ratio \texttt{OR}, the \texttt{Lower}
+and \texttt{Upper} bound of the 95\% confidence interval of this odds ratio, the standard error \texttt{SE}
+of the parameter estimate, the Wald \texttt{Statistic} for testing whether this SNP has an effect, and
+the corresponding \texttt{p-Value}.
+
+By default, an additive effect is tested. It is, however, also possible to consider a dominant effect
+<<>>=
+tdt(mat.test[,1], model="dominant")
+@
+
+or a recessive effect
+<<>>=
+tdt(mat.test[,1], model="recessive")
+@
+
+
+\subsection{Testing a Single Interaction between two SNPs}
+
+Similarly the interaction between \texttt{SNP1} and \texttt{SNP2} in \texttt{mat.test} can be tested by
+
+<<>>=
+tdtGxG(mat.test[,1], mat.test[,2])
+@
+
+In this case, the interaction is tested for epistatic interactions as described in \citet{cordell2002} and \citet{cordell2004}.
+Thus, two conditional logistic regression models are fitted to the cases and the respective 15 matched pseudo-controls
+(i.e.\ the 15 possible, but not transmitted Mendelian genotype realizations, given the parents' genotypes at the two loci), 
+one consisting of two coding variables for each
+of the two SNPs, and the other additionally containing the four possible interactions of these variables.
+The two fitted models are then compared by a likelihood ratio test, and the $p$-values are computed by approximation
+to a $\chi^2$-distribution with four degrees of freedom.
+
+Besides this likelihood ratio test (which is the default for the argument \texttt{test}), \texttt{tdtGxG} also provides the
+possibility to perform a likelihood ratio test comparing a conditional logistic regression model containing one parameter
+for each SNP and one parameter for the interaction of these two SNPs with a model only consisting of the two parameters for the
+main effects of the SNPs (\texttt{test = "lrt"}), where the genetic mode of inheritance assumed for the SNPs can be specified
+by the argument \texttt{mode} (by default, an additive mode is assumed). Furthermore, it is also possible to perform a Wald test
+for the interaction term either by considering a conditional logistic regression model either composed of one parameter for each SNP
+and one parameter for the interaction (\texttt{test = "full"}) or consisting of just one parameter for the interaction
+(\texttt{test = "screen"}).
+
+Thus, if the most simplest of these tests should be performed, then this could be done by
+
+<<>>=
+tdtGxG(mat.test[,1], mat.test[,2], test="screen")
+@
+
+\subsection{Testing all SNPs in a Matrix in Genotype Format with a Genotypic TDT}
+
+All SNPs represented by the columns of a matrix in genotype format can be tested with a gTDT by employing the function \texttt{colTDT}.
+Thus, all SNPs in \texttt{mat.test} can be tested by calling
+
+<<>>=
+tdt.out <- colTDT(mat.test)
+tdt.out
+@
+
+By default, the five top SNPs, i.e.\ the five SNPs with the lowest $p$-values, are shown ordered by their significance. 
+The top three SNPs can be shown by
+
+<<>>=
+print(tdt.out, 3)
+@
+
+If the integer specified in \texttt{print} is larger than or equal to the number of SNPs in the input matrix, the
+statistics for all SNPs are displayed in the order of their appearance in this matrix.
+
+<<>>=
+print(tdt.out, 10)
+@
+
+\subsection{Performing a MAX Test}
+
+Since the genetic mode of inheritance is typically unknown, it might be beneficial to use the maximum over the gTDT statistics
+for an additive, a dominant, and a recessive effect as test statistic, which can be done using the function \texttt{colTDTmaxStat}
+
+<<>>=
+max.stat <- colTDTmaxStat(mat.test)
+max.stat
+@
+
+This function just computes the MAX gTDT statistic, i.e.\ the maximum over the three gTDT statistics, since in contrast to these
+gTDT statistics, which under the null hypothesis follow an asymptotic $\chi^2_1$-distribution, the null distribution of the MAX gTDT
+statistic is unknown, and must therefore be estimated by a (time-consuming) permutation procedure. To also determine permutation-based
+p-values, \texttt{colTDTmaxTest} can be applied to a matrix in genotype matrix. For example,
+
+<<>>=
+max.out <- colTDTmaxTest(mat.test, perm=1000)
+@
+
+computes p-values for the six SNPs in \texttt{mat.test} based on 1000 permutations of the case-pseudo-control status.
+
+<<>>=
+max.out
+@
+
+\subsection{Testing all Pairs of SNPs in a Matrix in Genotype Format}
+
+All two-way interactions comprised a matrix in genotype format can be tested using the function \texttt{colGxG}. Since both the gTDT
+for two-way interactions and the likelihood ratio test of \citet{cordell2004}
+assume that the two considered loci are unlinked, the testing might fail, i.e.\ the fitting of the 
+conditional logistic regression might not work pro\-per\-ly, if the two SNPs are in (strong) LD. There are several other reasons
+why this might happen. One of these reasons is that either the minor allele frequencies of both SNPs are very small or that
+the number of trios influencing the parameter estimation becomes very small when considering the two SNPs in combination. 
+
+Therefore, \texttt{colGxG}
+provides an argument called \texttt{genes} that allows specifying which SNP belongs to which LD-block, gene, or genetic region.
+If \texttt{genes} is not specified, the interactions between all $m(m-1)/2$ pairs of the $m$ SNPs in a matrix are tested.
+If specified, only the interactions between SNPs showing different values of \texttt{genes} are tested.
+
+If we thus assume that the first two SNPs in \texttt{mat.test} belong to gene \texttt{G1} and the other four SNPs to
+\texttt{G2}
+
+<<>>=
+genes <- paste("G", rep(1:2, c(2,4)), sep="")
+genes
+@
+
+then only the four interactions between \texttt{SNP1} and each SNP from gene \texttt{G2}, as well as the four interactions
+between \texttt{SNP2} and each SNP from gene \texttt{G2} are tested, when calling
+
+<<>>=
+tdt2.out <- colGxG(mat.test, genes=genes)
+tdt2.out
+@
+
+Again, by default the top five SNP interactions are shown. The statistics for all eight interactions can be displayed by calling
+<<>>=
+print(tdt2.out, 8)
+@ 
+
+\subsection{Testing Gene-Environment Interactions with a Genotypic TDT}
+
+In genetic association studies, it is often also of interest to test gene-environment interactions, where most of the usually
+considered environmental variables are binary. The \texttt{R} package \texttt{trio} therefore also provides a function called
+\texttt{colGxE} to test the interactions between each of the SNPs comprised by a matrix in genotype format and a binary environmental
+variable with values zero and one. If we, for example, assume that the children in the first 50 trios comprised by (the first 150 rows of)
+\texttt{mat.test} are girls, and the remaining 50 are boys,
+
+<<>>=
+sex <- rep(0:1, e=50)
+@
+
+then we can test the interactions between the six SNPs in \texttt{mat.test} and the environmental variable ``sex" by
+
+<<>>=
+gxe.out <- colGxE(mat.test, sex)
+gxe.out
+@
+
+In this situation, a conditional logistic regression model $\beta_\text{G} G + \beta_\text{GxE} (G\times E)$ is fitted for each SNP, where $G$ is
+a variable coding for an additive effect of the SNP, and $G\times E$ is the corresponding gene-environment interaction. Analogously
+to the other gTDT functions, a dominant or a recessive effect can also be considered by changing the argument \texttt{model} of
+\texttt{colGxE}. 
+
+For both $\beta_\text{G}$ and $\beta_\text{GxE}$, the same as statistics as, for example, in \texttt{colTDT}, are computed.
+Additionally, the odds ratios and their confidence intervals for the exposed trios are determined (note that the odds ratios for
+the unexposed trios are given by $\exp\left(\beta_\text{G}\right)$), and a 2 degree of freedom Wald test for testing both
+$\beta_\text{G}$ and $\beta_\text{GxE}$ simultaneously as well as two likelihood ratio tests are performed, where the 2 df likelihood
+ratio test compares the likelihood of the full model (containing both $\beta_\text{G}$ and $\beta_\text{GxE}$) with the likelihood of a null model
+containing no variable, and the 1 df likelihood ratio test compares the likelihoods of the full model and a model only consisting
+of the SNP. The computation of all these statistics can be avoided by setting \texttt{addGandE = FALSE} (for the odds ratio of the
+exposed cases), \texttt{add2df = FALSE} (for the 2 df Wald test) and \texttt{whichLRT = "none"} for the two likelihood ratio tests.
+
+If these statistics should be determined, but only the results for the genotypic TDT for testing the gene-environment interaction
+should be printed, then this can be done by calling
+
+<<>>=
+print(gxe.out, onlyGxE=TRUE)
+@
+
+A convenient way to generate a data frame containing all the statistics determined by \texttt{colGxE} is to use the function 
+\texttt{getGxEstats}. This function can be employed to obtain these results for all considered SNPs, and it can also be used
+to get these statistics only for the top SNPs. If, for example, the results of the three SNPs showing the smallest p-values 
+for the 2 df likelihood ratio test are of interest, then the data frame containing these SNPs can be generated by
+
+<<>>=
+dat.top3 <- getGxEstats(gxe.out, top=3, sortBy="lrt2df")
+dat.top3
+@
+
+\section{Allelic TDT}\label{allelicTDT}
+
+
+Besides functions for performing genotypic TDTs, \texttt{trio} also provides functions for applying an allelic TDT and score
+tests related to the genotypic TDTs to matrices in genotype format. For example, the case-parent trio data in \texttt{mat.test}
+can be analyzed with an allelic TDT by
+
+<<>>=
+a.out <- allelicTDT(mat.test)
+a.out
+@
+
+By default, McNemar's test statistic
+\begin{equation*}
+a=\dfrac{(b-c)^2}{b+c}
+\end{equation*}
+is used as test statistic in \texttt{allelicTDT}, where $b$ and $c$ are the off-diagonal elements of the 2x2-table 
+summarizing the transmitted and untransmitted alleles from heterozygous parents, i.e.\ $b$ is the number of heterozygous parents
+that transmitted the minor allele to their respective children, and $c$ the number of heterozygous parents that transmitted the major allele. 
+Alternatively, a version of McNemar's test statistic corrected for continuity, namely
+\begin{equation*}
+a_\text{Cor}= \dfrac{(|b-c|-1)^2}{b+c}
+\end{equation*} 
+can be used by calling
+
+<<>>=
+a.out2 <- allelicTDT(mat.test, correct=TRUE)
+a.out2
+@
+
+
+\section{Score Tests}\label{score}
+
+If a score test instead of a Wald test, i.e.\ a genotypic TDT, should be considered in the analysis of genotype data, then
+\texttt{scoreTDT}, \texttt{scoreMaxStat}, \texttt{scoreGxG}, and \texttt{scoreGxE} can be used instead of and in the same way as 
+\texttt{colTDT}, \texttt{colTDTmaxStat}, \texttt{colGxG}, and \texttt{colGxE}, respectively. For example, the SNPs in \texttt{mat.test} 
+can be tested individually under the assumption of an additive mode of inheritance by
+
+<<>>=
+s.out <- scoreTDT(mat.test)
+s.out
+@
+
+Score tests, however, only provide scores and p-values, but do not the allow the computation of odds ratios, relative risks, and confidence
+intervals. Usually, score tests have the advantage that their test statistic is much faster too compute than the statistic of a Wald test.
+However, when considering SNPs or interactions between SNPs and binary environmental factors, both the score tests and the genotypic TDTs have
+about the same computation time, as in these situations, there also exist analytic solutions for the genotypic TDT statistics 
+\citep[see][]{schwender2012}.
+
+
+\section{Generating Data for Trio Logic Regression Input}\label{trio}
+
+If interactions of a higher order than two are of interest, trio logic regression
+can be used to detect disease-associated SNP interactions of any order.
+
+To generate data that can be used as input in trio logic regression,
+the sequential application of two functions is required. The function
+\texttt{trio.check} evaluates whether or not Mendelian errors are
+present in the data (stored either in linkage or in genotype format,
+see Section \ref{supported}). If no Mendelian inconsistencies are detected, this
+function creates an object that is passed to the function
+\texttt{trio.prepare}. The latter function then generates a matrix of the
+genotype information for the affected probands and the inferred
+pseudo-controls, taking the observed LD structure into
+account. Missing data are imputed in the process. The user, however,
+has to supply the information for the lengths of the LD blocks. 
+A function called \texttt{findLDblocks} for identifying LD blocks, and thus, for
+specifying the length of the blocks is therefore also contained in this package (see Section \ref{getLD}).
+Given the lengths of the LD blocks, the haplotype frequencies can be
+estimated, using the function \texttt{haplo.em} in the
+\texttt{haplo.stat} package.
+
+
+\subsection{Supported File Formats and Elementary Data Processing}\label{supported}
+
+In this section, we show how to generate data suitable for input to
+trio logic regression from complete pedigree data without Mendelian
+errors. The function \texttt{trio.check} requires that the trio data are
+already available as a data frame or matrix, either in linkage/ped format
+(the default), or in genotype format (for reading a ped file into \texttt{R}, see Section \ref{testing}).
+
+
+The first function used is always \texttt{trio.check}. Unless
+otherwise specified, this function assumes that the data are in
+linkage format. If no Mendelian inconsistencies in the data provided
+are identified, \texttt{trio.check} creates an object that can be
+processed in the subsequent analysis with this package. The genotype
+information for each SNP will be converted into a single variable,
+denoting the number of variant alleles.
+
+If we thus would like to check whether the data frame \texttt{trio.ped1} contains Mendelian errors, we call
+
+<<>>=
+trio.tmp <- trio.check(dat=trio.ped1)
+str(trio.tmp, max=1)
+trio.tmp$trio[1:6,]
+@ 
+
+Taking the LD structure of the SNPs into account is imperative when creating
+the genotypes for the pseudo-controls. This requires information on
+the LD blocks. However, there are many ways to delineate this block
+structure, and in the absence of a consensus what the best approach
+is, researchers have different preferences, and thus, results can be
+different. %It is therefore assumed that the user has already
+%delineated the block structure according to his or her method of
+%choice (assumed to be 1, 4, 2, and 3 in the following examples).
+In the function \texttt{findLDblocks}, a modified version of the method of \cite{gabriel2002}
+has been implemented, which can be used to specify the block structure by
+\begin{verbatim}
+   > table(foundBlocks$blocks}
+\end{verbatim}
+if \texttt{foundBlocks} is the output of \texttt{findLDblocks} (for details, see Section \ref{getLD}).
+
+The function \texttt{trio.prepare}, which operates on an output
+object of \text{trio.check}, accepts the block length information as
+an argument (in the following, we assume that the block structure is given by \texttt{c(1, 4, 2, 3)},
+i.e.\ the first block consists only of the first SNP, the second block of the next four SNPs, the third
+of the following two SNPs, and the last block of the remaining three SNPs). 
+If this argument is not specified, a uniform block length
+of 1 (i.e.\ no LD structure) is assumed. If the haplotype frequencies
+are not specified, they are estimated from the parents' genotypes
+(more information on this in the following sections).  The function
+\texttt{trio.prepare} then returns a list that contains the genotype
+information in binary format, suitable as input for trio logic
+regression: \texttt{bin} is a matrix with the conditional logistic
+regression response in the first columns, and each SNP as two binary
+variables using dominant and recessive coding. The list element \texttt{miss} contains
+information about missing values in the original data, and
+\texttt{freq} contains information on the estimated haplotype
+frequencies. To make the matrix generated by \texttt{trio.prepare} reproducible,
+the function \texttt{set.seed} is used to set the random number generator in a reproducible state.
+
+<<>>=
+set.seed(123456)
+trio.bin <- trio.prepare(trio.dat=trio.tmp, blocks=c(1,4,2,3))
+str(trio.bin, max=1)
+
+trio.bin$bin[1:8,]
+@ 
+
+As mentioned above, the \texttt{trio} package also accommodates trio
+genotype data.  The object \texttt{trio.gen1}, available in the \texttt{R}
+package, is an example of such a data set. Equivalent to
+\texttt{trio.ped1} used above, it contains information for 10 SNPs in
+100 trios. When used in \texttt{trio.check}, the argument
+\texttt{is.linkage} needs to be set to \texttt{FALSE}. The output from this
+function is then identical to the one shown derived from the linkage
+file, and can be passed to the function \texttt{trio.prepare}.
+
+<<>>=
+str(trio.gen1)
+trio.gen1[1:10,1:12]
+trio.tmp <- trio.check(dat=trio.gen1, is.linkage=FALSE)
+set.seed(123456)
+trio.bin2 <- trio.prepare(trio.dat=trio.tmp, blocks=c(1,4,2,3))
+
+trio.bin2$bin[1:8,]
+@ 
+
+
+\subsection{Missing Genotype Information}\label{missing}
+
+Missing genotypes in ped(igree) files are typically encoded using the
+integer 0. The data files can be processed as before if they contain
+such missing values:
+
+<<>>=
+str(trio.ped2)
+
+trio.tmp <- trio.check(dat=trio.ped2)
+trio.tmp$trio[1:6,]
+@ 
+
+Since trio logic regression requires complete data, the function
+\texttt{trio.prepare} also performs an imputation of the missing
+genotypes. The imputation is based on estimated haplotypes, using the
+block length information specified by the user. In a later section we
+demonstrate how this imputation can be run more efficiently when
+haplotype frequency estimates are already available.
+
+<<>>=
+set.seed(123456)
+trio.bin3 <- trio.prepare(trio.dat=trio.tmp, blocks=c(1,4,2,3))
+trio.bin3$bin[1:8,]
+@ 
+
+Missing data in genotypes files should be encoded using \texttt{NA},
+the conventional symbol in \texttt{R} to indicate missing values.
+
+<<>>=
+str(trio.gen2)
+trio.tmp <- trio.check(dat=trio.gen2, is.linkage=FALSE)
+set.seed(123456)
+trio.bin4 <- trio.prepare(trio.dat=trio.tmp, blocks=c(1,4,2,3))
+trio.bin4$bin[1:8,]
+@
+
+As the user might also be interested in the completed genotype data in
+the original format (genotype or linkage file), the function
+\texttt{trio.prepare} also allows for this option by using the argument
+\texttt{logic = FALSE}. In the resulting object, the matrix \texttt{bin} is
+then replaced by the data frame \texttt{trio}, and \texttt{miss} and
+\texttt{freq} are also returned.
+
+<<>>=
+trio.tmp <- trio.check(dat=trio.gen2, is.linkage=FALSE)
+set.seed(123456)
+trio.imp <- trio.prepare(trio.dat=trio.tmp, blocks=c(1,4,2,3), logic=FALSE)
+str(trio.imp, max=1)
+trio.imp$miss[c(1:6),]
+trio.gen2[1:6,]
+trio.imp$trio[1:6,]
+@ 
+
+The same applies to pedigree data:
+
+<<>>=
+trio.tmp <- trio.check(dat=trio.ped2)
+set.seed(123456)
+trio.imp2 <- trio.prepare(trio.dat=trio.tmp, blocks=c(1,4,2,3), logic=FALSE)
+trio.imp$trio[1:6,]
+@ 
+
+
+\subsection{Mendelian Errors}\label{mendelian}
+
+To delineate the genotype information for the pseudo-controls, the
+trio data must not contain any Mendelian errors. The function
+\texttt{trio.check} returns a warning, and an \texttt{R} object with relevant
+information when Mendelian errors are encountered is created. 
+
+<<>>=
+trio.tmp <- trio.check(dat=trio.ped.err)
+str(trio.tmp, max=1)
+trio.tmp$errors
+@ 
+
+In this data set, trio 1, for example, contains two Mendelian errors, in SNPs 9 and 10.
+
+<<>>=
+trio.tmp$trio.err[1:3, c(1,2, 11:12)]
+trio.ped.err[1:3,c(1:2, 23:26)]
+@ 
+
+It is the user's responsibility to find the cause for the Mendelian
+errors and correct those, if possible. However, Mendelian
+inconsistencies are often due to genotyping errors and thus, it might
+not be possible to correct those in a very straight-forward manner. In
+this instance, the user might want to encode the genotypes that cause
+theses Mendelian errors in some of the trios as missing data. The
+argument \texttt{replace = TRUE} in \texttt{trio.check} allows for this
+possibility. The resulting missing data can then be imputed as
+described in the previous section.
+
+<<>>=
+trio.rep <- trio.check(dat=trio.ped.err, replace=TRUE)
+str(trio.rep, max=1)
+trio.rep$trio[1:3,11:12]
+@ 
+
+The same option is available for data in genotype format with
+Mendelian inconsistencies.
+
+<<>>=
+trio.tmp <- trio.check(dat=trio.gen.err, is.linkage=FALSE)
+trio.tmp$errors
+trio.tmp$trio.err[1:6, c(1,2,7), drop=F]
+trio.rep <- trio.check(dat=trio.gen.err, is.linkage=FALSE, replace=TRUE)
+trio.rep$trio[1:6,c(1,2,7)]
+@ 
+
+\subsection{Using Haplotype Frequencies}
+
+As mentioned above, when estimates for the haplotype frequencies are
+already available, they can be used in the
+imputation of missing data and the delineation of the
+pseudo-controls. In case there are blocks of length one, i.e.\ SNPs
+not belonging to any LD blocks, the minor allele frequencies of those
+SNPs are supplied. In this case, no haplotype estimation
+is required when the function \texttt{trio.prepare} is run, which can result
+in substantial time savings. 
+
+As an example for the format of a file containing haplotype frequency
+estimates and SNP minor allele frequencies, the object
+\texttt{freq.hap} is available in the \texttt{R} package:
+
+<<>>=
+str(freq.hap)
+freq.hap[1:6,]
+@ 
+
+We can now impute the missing genotypes using these underlying haplotype frequencies.
+<<>>=
+trio.tmp <- trio.check(dat=trio.gen2, is.linkage=FALSE)
+set.seed(123456)
+trio.imp3 <- trio.prepare(trio.dat=trio.tmp, freq=freq.hap, logic=FALSE)
+str(trio.imp3, max=1)
+trio.gen2[1:6,]
+trio.imp3$trio[1:6,]
+@
+
+\section{Trio Logic Regression}\label{triolr}
+
+After having prepared a matrix suitable for a trio logic regression analysis, the function \texttt{trioLR} can be used
+to perform this analysis.
+
+\subsection{Parameter Settings for Trio Logic Regression}
+
+To ensure that the following examples are fast to run, we here only use 1000 iterations, i.e.\ the minimum number of iterations allowed,
+in the stochastic search algorithms, simulated annealing and MCMC, employed in trio logic regression. \textit{\bf In a real trio
+logic regression analysis, at least a few hundred thousands of iterations should be used, where the number of iterations
+in particular depends on the number of variables considered in the analysis.} 
+
+The parameter \texttt{iter} for setting the number of iterations along with several other control parameters for the two
+stochastic search algorithms and the logic tree, i.e.\ the logic expression, grown in a trio logic regression can be specified
+by employing the argument \texttt{control} of the function \texttt{trioLR}, which in turn should be specified via the function
+\texttt{lrControl}. Here, we set
+
+<<>>=
+my.control <- lrControl(start=1, end=-3, iter=1000, output=-4)
+@
+
+where \texttt{start} and \texttt{end} are the starting and end temperature on log10-scale in simulated annealing, where the temperature
+governs how likely it is that the model proposed in an iteration of trio logic regression is accepted although it actually performs worse than the
+model accepted in the previous iteration (at the beginning, this acceptance probability is comparatively high so that many models are
+visited/accepted, whereas in the last iterations, this probability is very low so that virtually only models are accepted if they are
+better than the current trio logic regression model). Again, it is very hard to give a good recommendation how to choose \texttt{start}
+and \texttt{end} (if they are not specified, the algorithm tries to find good choices for these two parameters, which, however, might
+works suboptimal), as their optimal specification highly depends on the data at hand. In our experience, \texttt{start = 1} and \texttt{end = -3}
+are often reasonable choices for a trio logic regression, but for a particular case-parent trio data set other choices might work better.
+The help page for the function \texttt{logreg.anneal.control} in the \texttt{R} package \texttt{LogicReg} gives a comprehensive
+introduction on how the control parameters of simulated annealing can be chosen.
+
+Finally, we have set \texttt{output = -4}, so that the models visited during the search for the best trio logic regression model
+with an MCMC algorithm are not stored in file, but all statistics for individual SNPs, pairs of SNPs, and triplets of SNPs are computed.
+
+
+\subsection{Performing a Trio Logic Regression Analysis}
+
+Employing this specification of these four parameters and the defaults for the other control parameters, \texttt{trioLR} can
+be directly applied to the output of \texttt{trio.prepare}, i.e.\ for example \texttt{trio.bin} (see Section \ref{missing}),
+by
+
+<<>>=
+lr.out <- trioLR(trio.bin, control=my.control, rand=9876543)
+lr.out
+@
+
+where we specify the argument \texttt{rand} to set the random number generator in a reproducible state.
+By default, the logic expression found by trio logic regression is printed as it has been found. Alternatively, it can also be 
+printed in disjunctive normal form
+
+<<>>=
+print(lr.out, asDNF=TRUE)
+@
+
+This has the advantage that the interactions -- in particular, in a statistical sense -- contained in the logic expression are
+directly given by the AND-combinations (\&) in this disjunctive normal form. In the example, this advantage admittedly does not
+really exist, but when a much larger and more complex logic tree is grown, the logic expression represented by this logic tree
+can be very hard to interpret.
+
+It is also possible to construct the matrix \texttt{x} containing the values of the cases and the matched pseudo-controls and
+the vector \texttt{y} comprising the class labels of the (artificial) subjects without using \texttt{trio.prepare}. In this situation, each
+column of \texttt{x} must represent one of the logic/binary variable, coded by zeros and ones, and each row must correspond to
+a case or a pseudo-control, where each block of four consecutive rows has to consist of the data for a case and the three matched
+pseudo-controls (in this order). In \texttt{y}, each case must be coded by a \texttt{3} and each pseudo-control by a \texttt{0} so
+that \texttt{y} is given by
+
+<<>>=
+n.trios <- 100 
+y <- rep(c(3, 0, 0, 0), n.trios)
+@
+
+where \texttt{n.trios} is the number of case-parent trios considered in a study. This number is here set to \texttt{100}, as 
+our example data set \texttt{trio.bin} consists of 100 trios. To avoid the construction of the matrix \texttt{x}, we extract this matrix
+for this example from \texttt{trio.bin}.
+
+<<>>=
+x <- trio.bin$bin[,-1]
+@
+
+The same trio regression analysis as above can then be performed by
+
+<<>>=
+lr.out2 <- trioLR(x, y, control=my.control, rand=9876543)
+lr.out2
+@ 
+
+\subsection{Permutation Tests for the Trio Logic Regression Model}
+
+
+The trio logic regression model resulting from such an application can then be tested by a null-model permutation
+procedure, which checks whether there is signal in the data, or by a conditional permutation test for model selection.
+Both can be performed using the function \texttt{trio.permTest} in which the argument \texttt{conditional} specifies
+which of these permutation tests are done. Thus, the null-model permutation test with \texttt{n.perm = 20} permutations
+can be applied to the case-parent trio data in \texttt{trio.bin} by
+\begin{verbatim}
+   > trio.permTest(lr.out, n.perm=20)
+\end{verbatim}
+
+while the conditional permutation test can be performed by
+\begin{verbatim}
+   > trio.permTest(lr.out, conditional=TRUE, n.perm=20)
+\end{verbatim} 
+
+
+\subsection{Fitting Several Trio Logic Regression Models}
+
+By default, (trio) logic regression uses simulated annealing as search algorithm, and \texttt{trioLR} fits one trio logic regression
+model comprising one logic tree with a maximum of five leaves, i.e.\ five binary variables coded by zeros and ones
+Thus, the argument \texttt{nleaves} is by default set to \texttt{nleaves = 5}, whereas the number of logic trees cannot be changed
+in a trio logic regression.
+
+Alternatively, several trio logic regression models with different maximum numbers of leaves/variables can be fitted by setting
+\texttt{nleaves} to a vector of length 2, where the first element specifies the lowest maximum number, and the second element
+the largest maximum number. If thus, for example, trio logic regression models should be fitted in which the maximum number
+of leaves varies between 3 and 5, then this can be done by
+
+\begin{figure}[!t]
+\centerline{\includegraphics[width=0.7\textwidth]{figure1lr}}
+\vspace*{-8pt}
+\caption{Logic tree built in a trio logic regression analysis of case-parent trio data in which a maximum of five leaves
+was allowed.}\label{fig:tree}
+\end{figure} 
+
+<<>>=
+lr.out3 <- trioLR(trio.bin, nleaves=c(3,5), control=my.control, rand=9876543)
+lr.out3
+@
+
+
+\subsection{Plotting Trio Logic Regression Models}
+
+The resulting logic trees cannot only be printed, but also plotted. If, for example, the logic tree in the third trio logic regression
+model (i.e.\ the model with a maximum of five leaves) should be plotted, then this can be done by
+
+\begin{verbatim}
+   plot(lr.out3, whichTree=3)
+\end{verbatim}
+(see Figure \ref{fig:tree}), where the argument \texttt{whichTree} needs only to be specified if several models have been fitted.
+
+
+\subsection{Greedy Search in Trio Logic Regression}
+
+Alternatively to simulated annealing, a greedy search can be employed in trio logic regression by changing the
+argument \texttt{search} to \texttt{"greedy"}.
+
+<<>>=
+lr.out4 <- trioLR(trio.bin, search="greedy", rand=9876543)
+lr.out4
+@  
+   
+   
+\subsection{MC Trio Logic Regression}
+   
+While trio logic regression based on simulated annealing or a greedy search tries to identify the logic expression, and thus, the
+trio logic regression model, that provides the best prediction for the disease risk, the main goal of trio MC logic regression, i.e.\ trio
+logic regression based on MCMC is the specification of the individual relevance of SNPs and the joint importance of pairs and triplets
+of SNPs for disease risk by counting how often the individual SNPs occur in the models visited (and accepted) during the MCMC search
+and how often pairs and triplets of SNPs occur jointly in these models \citep[cf.][]{kooperberg2005}. 
+This trio MC logic regression can be performed by
+
+<<>>=
+lr.out5 <- trioLR(trio.bin, search="mcmc", control=my.control, rand=9876543)
+lr.out5
+@
+
+\begin{figure}[!t]
+\centerline{\includegraphics[width=0.7\textwidth]{figure2lr}}
+\vspace*{-8pt}
+\caption{Visualization of the results of a trio MC logic regression analysis for the individual SNPs.}\label{fig:mc}
+\end{figure} 
+
+The results of this analysis can be visualized by plotting for each SNP the percentages of visited models in which this SNP occurs
+(\texttt{freqType = 1}; the default), and for each pair of SNPs in how many of the visited models this pair occurs jointly
+(\texttt{freqType = 2}) and the observed-to-expected ratio of being jointly in the models (\texttt{freqType = 3}). For example,
+in Figure \ref{fig:mc},
+
+\begin{verbatim}
+     plot(lr.out5, freqType=1, useNames=TRUE)
+\end{verbatim}
+
+the frequencies for the individual SNPs are displayed.
+
+
+\begin{figure}[!t]
+\centerline{\includegraphics[width=0.7\textwidth]{figure3lr}}
+\vspace*{-8pt}
+\caption{Values of the importance measure of trioFS for the five most important identified SNP interactions.}\label{fig:fs}
+\end{figure} 
+
+\section{Analysis of Trio Data with trioFS}\label{trioFS}
+
+Another way to quantify the importance of SNPs and SNP interactions for the prediction of the disease risk is to apply trio logic
+regression to several subsets of the case-parent trio data and then employ the resulting trio logic regression models to compute
+importance measures for the interactions found. This procedure called trioFS (trio Feature Selection) is implemented in the function
+\texttt{trioFS} that can be used in a similar way as \texttt{trioLR}. For example, trioFS can be applied to the case-parent trio data
+by 
+
+<<>>=
+fs.out <- trioFS(trio.bin, B=5, control=my.control, rand=9876543)
+fs.out
+@
+
+where we here consider only \texttt{B = 5} subsets of the data, while in a real analysis, at least \texttt{B = 20} subsets should be
+considered. By default, simulated annealing is used in this search. Alternatively, it is also possible to do a greedy search by setting
+the argument \texttt{fast} of \texttt{trioFS} to \texttt{TRUE}.
+
+The importances of the identified SNP interactions cannot only be printed, but also be plotted.
+\begin{verbatim}
+   plot(fs.out)
+\end{verbatim}
+
+(see Figure \ref{fig:fs}).  
+
+
+\section{Detection of LD Blocks}\label{getLD}
+
+For the estimation of the haplotype structure that might be used in the \texttt{R} function \texttt{trio.prepare},
+this package also includes functions for the fast computation of the pairwise $D^\prime$ and $r^2$
+values for hundreds or thousands of SNPs, and for the identification of LD blocks in these genotype
+data using a modified version of the algorithm proposed by \citet{gabriel2002}. For the latter, it
+is assumed that the SNPs are ordered by their position on the chromosomes.
+
+These functions are not restricted to trio data, but can also be applied to population-based data.
+The only argument of these functions specifically included for trio data is \texttt{parentsOnly}.
+If set to \texttt{TRUE}, only the genotypes of the parents are used in the determination of
+the pairwise values of the LD measures and the estimation of the LD blocks. Furthermore, each parent
+is only considered once so that parents with more than one offspring do not bias the estimations.
+If trio data is used as input, the functions assume that the matrix containing the SNP data is in genotype format.
+
+\subsection{Computing Values of LD Measures}
+
+
+Here, we consider a simulated matrix \texttt{LDdata} from a population-based study. Thus, all subjects are assumed
+to be unrelated. This matrix contains simulated genotype data for 10 LD blocks each consisting of 5 SNPs each typed
+on 500 subjects. The pairwise $D^\prime$ and $r^2$ values for the SNPs in this matrix can be computed by
+
+<<>>=
+ld.out <- getLD(LDdata, asMatrix=TRUE)
+@ 
+
+where by the default these values are stored in vectors to save memory. If \texttt{asMatrix} is set to \texttt{TRUE},
+the values will be stored in matrices. The pairwise LD values for the first 10 SNPs (rounded to the second digit) can be displayed
+by
+
+<<>>=
+round(ld.out$Dprime[1:10,1:10], 2)
+@
+
+<<>>=
+round(ld.out$rSquare[1:10,1:10], 2)
+@
+
+and the pairwise LD plot for all SNPs can be generated by
+
+\begin{figure}[!b]
+\centerline{\includegraphics[width=0.5\textwidth]{figure1ld}}
+\caption{Pairwise $r^2$ values for the SNPs from \texttt{LDdata}.}\label{fig:1}
+\end{figure} 
+
+\begin{verbatim}
+   > plot(ld.out)
+\end{verbatim}
+(see Figure \ref{fig:1}). This figure shows the $r^2$-values. The $D^\prime$ values can be plotted by
+
+\begin{verbatim}
+   > plot(ld.out, "Dprime")
+\end{verbatim} 
+(not shown).
+
+\subsection{Estimating LD Blocks}
+
+The LD blocks in genotype data can be identified using the modified algorithm of \citet{gabriel2002}
+by calling
+
+<<>>=
+blocks <- findLDblocks(LDdata)
+blocks
+@
+
+Alternatively, the output of \texttt{getLD} can be used when \texttt{addVarN} has been set to \texttt{TRUE}
+in \texttt{getLD} to store additional information on the pairwise LD values.
+
+<<>>=
+ld.out2 <- getLD(LDdata, addVarN=TRUE)
+blocks2 <- findLDblocks(ld.out2)
+blocks2
+@
+
+
+\begin{figure}[!t]
+\centerline{\includegraphics[width=0.5\textwidth]{figure2ld}}
+\caption{LD blocks as found by the modified algorithm of \citet{gabriel2002}. The borders of the LD blocks are marked
+by red lines. The color for the LD between each pair of SNPs is defined by the three categories used by \citet{gabriel2002} 
+to define the LD blocks.}\label{fig:2}
+\end{figure} 
+
+The blocks can also be plotted by
+
+\begin{verbatim}
+   > plot(blocks)
+\end{verbatim}
+(see Figure \ref{fig:2}). In this figure, the borders of the LD blocks are marked by red lines.
+By default, the three categories used by the algorithm of \citet{gabriel2002} to define the LD blocks are
+displayed. Since this algorithm is based on the $D^\prime$ values, it is also possible to show these values in
+the LD (block) plot.
+
+
+\begin{figure}[!t]
+\centerline{\includegraphics[width=0.5\textwidth]{figure3ld}}
+\vspace*{-8pt}
+\caption{LD blocks as found by the modified algorithm of \citet{gabriel2002}. The borders of the LD blocks are marked
+by red lines. The darker the field for each pair of SNPs, the larger is the $D^\prime$ value for the corresponding SNP pair.}\label{fig:3}
+\end{figure} 
+
+\begin{verbatim}
+   > plot(blocks, "Dprime")
+\end{verbatim}
+(see Figure \ref{fig:3}). 
+
+As mentioned in Section \ref{trio}, the haplotype structure required by \texttt{trio.prepare} can be obtained by
+
+<<>>=
+hap <- as.vector(table(blocks$blocks))
+hap
+@
+
+
+
+\section{Simulation}\label{simulation}
+
+
+The function \texttt{trio.sim} simulates case-parents trio data when
+the disease risk of children is specified by (possibly higher-order)
+SNP interactions. The mating tables and the respective sampling
+probabilities depend on the haplotype frequencies (or SNP minor allele
+frequencies when the SNP does not belong to a block). This information
+is specified in the \texttt{freq} argument of the function
+\texttt{trio.sim}. The probability of disease is assumed to be
+described by the logistic term $\text{logit}(p) = \alpha + \beta
+\times \text{Interaction}$, where $\alpha = \text{logit (\texttt{prev})}=\log(
+\frac{\text{\texttt{prev}}}{1-\text{\texttt{prev}}} )$ and $\beta =
+\log(\text{\texttt{OR}})$. The arguments \texttt{interaction, prev} and
+\texttt{OR}, are specified in the function \texttt{trio.sim}. Generating the mating tables and the
+respective sampling probabilities, in particular for higher order
+interactions, can be very CPU and memory intensive. We show how this
+information, once it has been generated, can be used for future
+simulations, and thus, speed up the simulations dramatically.
+
+
+\subsection{A Basic Example}
+
+We use the built-in object \texttt{simuBkMap} in a basic example to
+show how to simulate case-parent trios when the disease risk depends
+on (possibly higher order) SNP interactions. This file contains
+haplotype frequency information on 15 blocks with a total of 45 loci.
+In this example, we specify that the children with two variant alleles
+on SNP1 and two variant alleles on SNP5 have a higher disease risk. We
+assume that \texttt{prev = 0.001} and \texttt{OR = 2} in the logistic model specifying
+disease risk, and simulate a single replicate of 20 trios total. 
+
+
+<<>>=
+str(simuBkMap)
+simuBkMap[1:7,]
+sim <- trio.sim(freq=simuBkMap, interaction="1R and 5R", prev=.001, OR=2, 
+n=20, rep=1)
+str(sim)
+sim[[1]][1:6, 1:12]
+@  
+
+
+
+\subsection{Using Estimated Haplotype Frequencies}
+
+In this example we estimate the haplotype frequencies in the built-in
+data set \texttt{trio.gen1}, which contains genotypes for 10 SNPs
+in 100 trios. These estimated frequencies are then used to simulate 20
+trios for the above specified disease risk model.
+
+<<>>=
+trio.tmp <- trio.check(dat=trio.gen1, is.linkage=FALSE)
+trio.impu <- trio.prepare(trio.dat=trio.tmp, blocks=c(1,4,2,3), logic=TRUE)
+
+str(trio.impu, max=2)
+trio.impu$freq[1:7,]
+sim <- trio.sim(freq=trio.impu$freq, interaction="1R and 5R", prev=.001, OR=2, 
+n=20, rep=1)
+
+str(sim)
+sim[[1]][1:6, ]
+@
+
+As before, the object containing the haplotype frequency information
+can also be generated from external haplotype frequencies and SNP
+minor allele frequencies. In
+the following example we specify the haplotype frequencies, and generate two replicates of ten
+trios each.
+
+<<>>=
+sim <- trio.sim(freq=freq.hap, interaction="1R or 4D", prev=.001, OR=2, 
+n=10, rep=2)
+str(sim)
+sim[[1]][1:6,]
+@ 
+
+
+\subsection{Using Step-Stones}
+
+Generating the mating tables and the respective sampling probabilities
+necessary to simulate case-parent trios can be very time consuming for
+interaction models involving three or more SNPs. In simulation
+studies, many replicates of similar data are usually required, and
+generating these sampling probabilities in each instance would be a
+large and avoidable computational burden (CPU and memory). The
+sampling probabilities depend foremost on the interaction term and the
+underlying haplotype frequencies, and as long as these remain constant
+in the simulation study, the mating table information and the sampling
+probabilities can be ``recycled.'' This is done by storing the
+relevant information (denoted as ``step-stone'') as a binary \texttt{R} file in
+the working directory, and loading the binary file again in future
+simulations, speeding up the simulation process dramatically. It is
+even possible to change the parameters \texttt{prev} and \texttt{OR} in these
+additional simulations, as the sampling probabilities can be adjusted
+accordingly.
+
+In the following example, we first simulate case-parent trios using a
+three-SNP interaction risk model, and save the step-stone object. We
+then simulate additional trios with a different parameter \texttt{OR},
+using the previously generated information.
+
+<<>>=
+sim <- trio.sim(freq=freq.hap, interaction="1R or (6R and 10D)", prev=.001, 
+OR=2, n=10, rep=1)
+str(sim)
+sim[[1]][1:6,]
+@ 
+
+<<>>=
+sim <- trio.sim(freq=freq.hap, interaction="1R or (6R and 10D)", prev=.001, 
+OR=3, n=10, rep=1, step.save="step3way")
+str(sim, max=1)
+sim[[1]][1:6,]
+@ 
+
+
+
+
+\section*{Acknowledgments}
+Financial support was provided by DFG grants SCHW 1508/1-1, SCHW 1508/2-1, and SCHW 1508/3-1, as well as
+NIH grants R01 DK061662 and R01 HL090577.
+
+%\clearpage
+%\bibliography{xbib_appFinal}
+%\bibliographystyle{mypapers}
+
+\begin{thebibliography}{4}
+
+\bibitem[Cordell(2002)Cordell]{cordell2002}
+Cordell, H.J. (2002).
+\newblock Epistasis: What it Means, what it Doesn't Mean, and Statistical
+  Methods to Detect it in Humans.
+\newblock {\em Human Molecular Genetics}, {\bf 11}, 2463--2468.
+
+\bibitem[Cordell {\em et al.}(2004)Cordell, Barratt, and Clayton]{cordell2004}
+Cordell, H.J., Barratt, B.J., and Clayton, D.G. (2004).
+\newblock Case/Pseudocontrol Analysis in Genetic Association Studies: A Unified
+  Framework for Detection of Genotype and Haplotype Associations, Gene-Gene and
+  Gene-Environment Interactions, and Parent-of-Origin Effects.
+\newblock {\em Genetic Epidemiology}, {\bf 26}, 167--185.
+
+\bibitem[Gabriel {\em et al.}(2002)Gabriel, Schaffner, Nguyen, Moore, Roy,
+  Blumenstiel, Higgins, {DeFelice}, Lochner, Faggart, {Liu-Cordero}, Rotimi,
+  Adeyemo, Cooper, Ward, Lander, Daly, and Altshuler]{gabriel2002}
+Gabriel, S.B., Schaffner, S.F., Nguyen, H., Moore, J.M., Roy, J.,
+  Blumenstiel, B., Higgins, J., {DeFelice}, M., Lochner, A., Faggart, M.,
+  {Liu-Cordero}, S.N., Rotimi, C., Adeyemo, A., Cooper, R., Ward, R., Lander,
+  E.S., Daly, M.J., and Altshuler, D. (2002).
+\newblock The Structure of Haplotype Blocks in the Human Genome.
+\newblock {\em Science}, {\bf 296}, 2225--2229.
+
+\bibitem[Kooperberg and Ruczinski(2005)Kooperberg and Ruczinski]{kooperberg2005}
+Kooperberg, C. and Ruczinski, I. (2005).
+\newblock Identifying Interacting SNPs Using Monte Carlo Logic Regression. 
+\newblock {\em Genetic Epidemiology}, {\bf 28}, 157--170. 
+
+\bibitem[Li {\em et al.}(2010)Li, Fallin, Louis, Lasseter, {McGrath},
+  Avramopoulos, Wolyniec, Valle, Liang, Pulver, and Ruczinski]{li2010}
+Li, Q., Fallin, M.D., Louis, T.A., Lasseter, V.K., {McGrath}, J.A.,
+  Avramopoulos, D., Wolyniec, P.S., Valle, D., Liang, K.Y., Pulver, A.E.,
+  and Ruczinski, I. (2010).
+\newblock Detection of {SNP-SNP} Interactions in Trios of Parents with
+  Schizophrenic Children.
+\newblock {\em Genetic Epidemiology}, {\bf 34}, 396--406.
+
+\bibitem[Schaid(1996)Schaid]{schaid1996}
+Schaid, D.J. (1996).
+\newblock General Score Tests for Associations of Genetic Markers with Disease
+  Using Cases and Their Parents.
+\newblock {\em Genetic Epidemiology}, {\bf 13}, 423--449.
+
+\bibitem[Schwender {\em et al.}(2011a)Schwender, Bowers, Fallin, and Ruczinski]{schwender2011}
+Schwender, H., Bowers, K., Fallin, M.D., and Ruczinski, I. (2011).
+\newblock Importance Measure for Epistatic Interactions in Case-Parent Trios.
+\newblock {\emph Annals of Human Genetics}, {\bf 75}, 122--132.
+
+\bibitem[Schwender {\em et al.}(2011b)Schwender, Taub, Beaty, Marazita, and Ruczinski]{schwender2012}
+\newblock Schwender, H., Taub, M.A., Beaty, T.H., Marazita, M.L., and Ruczinski, I. (2011). 
+\newblock Rapid Testing of SNPs and Gene-Environment Interactions in Case-Parent Trio Data 
+Based on Exact Analytic Parameter Estimation. 
+\newblock {\emph Biometrics}. DOI: 10.1111/j.1541-0420.2011.01713.x. 
+
+\bibitem[Spielman {\em et al.}(1993)Spielman, McGinnis, and Ewens]{spielman1993}
+Spielman, R.S., McGinnis, R.E., and Ewens, W.J. (1993).
+\newblock Trsnmmission Test for Linkage Disequilibrium: The Insulin Gene Region
+and Insulin-Dependent Diabetes Mellitus (IDDM).
+\newblock {\em American Journal of Human Genetics}, {\bf 52}, 506--516.
+
+\end{thebibliography}
+\end{document}
