@@ -13,8 +13,8 @@ trioLR.trioPrepare <- function(x, ...){
 
 trioLR.default <- function(x, y, search=c("sa", "greedy", "mcmc"), nleaves=5, penalty=0, weights=NULL,
 		control=lrControl(), rand=NA, ...){
-	(require(logicFS, quietly=TRUE) && packageVersion("logicFS") >= "1.28.1") || 
-		stop("Package logicFS >= 1.28.1 is required.")
+	(require(LogicReg, quietly=TRUE) && packageVersion("LogicReg") >= "1.5.3") || 
+		stop("Package LogicReg >= 1.5.3 is required.")
 	call <- match.call()
   	if(nrow(x)%%4 != 0)
     		stop("x does not seem to contain trio data with three pseudo-controls for each affected children\n",

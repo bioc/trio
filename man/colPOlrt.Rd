@@ -14,7 +14,7 @@ or the Transmission Asymmetry Test proposed by Weinberg et al. (1998).
 \usage{
 colPOlrt(mat.snp, size = 20)
    
-colTAT(mat.snp, size = 50, bothHet = 0) 
+colTAT(mat.snp, stratified = FALSE, size = 50, bothHet = 0) 
 
 \method{print}{polrt}(x, top = 5, digits = 4, ...)
 
@@ -29,6 +29,8 @@ colTAT(mat.snp, size = 50, bothHet = 0)
     This matrix might be generated from a ped-file by, e.g., employing \code{\link{ped2geno}}.
 }
   \item{size}{the number of SNPs considered simultaneously when computing the test statistics.
+}
+  \item{stratified}{should also test statistics and p-values stratified by paternal and maternal transmission be computed?
 }
   \item{bothHet}{a numeric value between 0 and 1 specifying how trios in which both parents are heterozygous are weighted in
      determination of the TAT statistic. By default, such trios are ignored (as proposed by Weinberg, 1999). If \code{bothHet = 1},
@@ -56,7 +58,18 @@ For \code{colTAT}, an object of class \code{tat} consisting of the following num
 
 \item{stat}{the values of the test statistic of transmission asymmetry test for all SNPs in \code{mat.snp},}
 \item{pval}{the corresponding p-values,}
-\item{usedTrios}{the number of trios affecting the determination of the TAT statistic.}
+\item{usedTrios}{the number of trios affecting the determination of the TAT statistic,}
+
+and if \code{stratified = TRUE}
+
+\item{matStrat}{a matrix with four columns containing the number of minor alleles transmitted and not-transmitted by heterozygous 
+fathers and mothers,}
+\item{statPaternal}{a numeric vector containing for each SNP the value of the test statistic for testing whether 
+the numbers of paternal transmissions and non-transmissions differ,}
+\item{pvalPaternal}{the p-values corresponding to \code{statPaternal},} 
+\item{statMaternal}{a numeric vector containing for each SNP the value of the test statistic for testing whether 
+the numbers of maternal transmissions and non-transmissions differ,}
+\item{pvalMaternal}{the p-values corresponding to \code{statMaternal}.} 
 }
 
 \references{
