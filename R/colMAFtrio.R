@@ -1,4 +1,4 @@
-colMAFtrio <- function(geno){
+colMAFtrio <- function(geno, changeMinor=FALSE){
 	if(!is.matrix(geno) & !is.data.frame(geno))
 		stop("geno must be a matrix or a data frame.")
 	if(is.null(rownames(geno)))
@@ -10,7 +10,13 @@ colMAFtrio <- function(geno){
 	if(any(!mat %in% c(0:2, NA)))
 		stop("The genotypes in geno must be coded by 0, 1, 2; and missing values by NA.") 
 	mat <- mat[!duplicated(rownames(mat)),]
-	colSums(mat, na.rm=TRUE) / (2 * colSums(!is.na(mat)))
+	maf <- colSums(mat, na.rm=TRUE) / (2 * colSums(!is.na(mat)))
+	if(changeMinor && any(maf > 0.5)){
+		ids <- which(maf > 0.5)
+		maf[ids] <- 1 - maf[ids]
+		warning("Some of the MAFs were larger than 0.5. These MAFs are replaced by 1 - MAF.")
+	}
+	maf
 }
 
 

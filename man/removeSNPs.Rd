@@ -20,7 +20,7 @@ removeTrios(geno, perc.na = 1)
 
 orderSNPs(geno, map, snp = "SNP", orderBy = c("Chr", "Position"))
 
-colMAFtrio(geno)
+colMAFtrio(geno, changeMinor = FALSE)
 }
 
 \arguments{
@@ -41,6 +41,9 @@ colMAFtrio(geno)
 }
   \item{orderBy}{character string of length 2 specifying the (case-sensitive) names of the columns of \code{map} containing
     the chromosomes and the positions of the SNPs in \code{geno}.
+}
+  \item{changeMinor}{logical specifying whether 1 - minor allele frequency should be returned when the MAF is larger than 0.5.
+	   The MAF might be larger than 0.5, if the minor allele was specified on another data set than the one considered in \code{colMAFtrio}.
 }
 }
 \value{For \code{removeSNPs}, \code{removeTrios}, and \code{orderSNPs}, a reduced or ordered version of \code{geno}.
