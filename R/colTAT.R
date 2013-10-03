@@ -26,10 +26,6 @@ colTAT <- function(mat.snp, stratified=FALSE, size=50, bothHet=0){
 		if(stratified){
 			sp[int[i]:(int[i+1]-1)] <- tmp$sp
 			sm[int[i]:(int[i+1]-1)] <- tmp$sm
-			print(i)
-			print(dim(matStrat[int[i]:(int[i+1]-1),,drop=FALSE]))
-			print(dim(tmp$matObs))
-			print(tmp$matObs)
 			matStrat[int[i]:(int[i+1]-1),] <- tmp$matObs 
 		}
 	}
