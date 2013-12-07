@@ -51,10 +51,10 @@ colTAT <- function(mat.snp, stratified=FALSE, size=50, bothHet=0){
 
 tatChunk <- function(geno, bothHet=0, stratified=FALSE){
 	matObs <- getTATnumbers(geno, bothHet=bothHet)
-	ttp <- rowSums(matObs[,c(1,2)])
-	ttm <- rowSums(matObs[,c(3,4)])
-	tpm <- rowSums(matObs[,c(1,3)])
-	ntpm <- rowSums(matObs[,c(2,4)])
+	ttp <- rowSums(matObs[,c(1,2), drop=FALSE])
+	ttm <- rowSums(matObs[,c(3,4), drop=FALSE])
+	tpm <- rowSums(matObs[,c(1,3), drop=FALSE])
+	ntpm <- rowSums(matObs[,c(2,4), drop=FALSE])
 	n <- ttp + ttm
 	matExp <- matrix(nrow = ncol(geno), ncol=4)
 	matExp[,1] <- ttp * tpm 
@@ -65,8 +65,8 @@ tatChunk <- function(geno, bothHet=0, stratified=FALSE){
 	stat <- rowSums(matObs * matObs / matExp) - n
 	if(!stratified)
 		return(list(stat=stat, n=n))
-	sp <- 2 * rowSums(matObs[,1:2] * matObs[,1:2]) / ttp - ttp
-	sm <- 2 * rowSums(matObs[,3:4] * matObs[,3:4]) / ttm - ttm
+	sp <- 2 * rowSums(matObs[,1:2, drop=FALSE] * matObs[,1:2, drop=FALSE]) / ttp - ttp
+	sm <- 2 * rowSums(matObs[,3:4, drop=FALSE] * matObs[,3:4, drop=FALSE]) / ttm - ttm
 	list(stat=stat, n=n, sp=sp, sm=sm, matObs=matObs)	
 }
 	
@@ -97,9 +97,9 @@ getTATnumbers <- function(geno, bothHet=0){
 	if(bothHet > 0){
 		het <- (mom == 1) & (dad == 1)
 		n112 <- colSums(het & (kid == 2), na.rm=TRUE)
-		matObs[,c(1,3)] <- matObs[,c(1,3)] + bothHet * n112
+		matObs[,c(1,3)] <- matObs[,c(1,3), drop=FALSE] + bothHet * n112
 		n110 <- colSums(het & (kid == 0), na.rm=TRUE)
-		matObs[,c(2,4)] <- matObs[,c(2,4)] + bothHet * n110
+		matObs[,c(2,4)] <- matObs[,c(2,4), drop=FALSE] + bothHet * n110
 	}
 	matObs
 }
