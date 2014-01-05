@@ -17,7 +17,8 @@ allelicTDT,
 getLDlarge,
 trio.power,
 probTDT,
-colPOlrt, colTAT
+colPOlrt, colTAT,
+vcf2geno
 )
 
 S3method(plot, getLD)

@@ -6,7 +6,7 @@ ped2geno <- function(ped, snpnames=NULL, coded=c("12", "AB", "ATCG", "1234"),
 			"famid, pid, fatid, motid, sex, affected.")
 	if(any(duplicated(ped[,2])))
 		stop("The IDs of the individuals in the second column of ped must be unique.")
-	if(any(ped[,3]==0 & ped[,4]!=0) | any(ped[,3]!=0 & ped[,3]==0))
+	if(any(ped[,3]==0 & ped[,4]!=0) | any(ped[,3]!=0 & ped[,4]==0))
 		stop("In some of the rows, fatid is equal to zero and matid differs from zero,\n",
 			"or vice versa.")
 	mat.snp <- as.matrix(ped[,-(1:6)])
