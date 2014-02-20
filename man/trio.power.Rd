@@ -59,8 +59,12 @@ An object of class trio.power containing the following numeric values or vectors
 
 }
 \references{
-Knapp,M. (1999). A Note on Power Approximations for the Transmission/Disequilibrium Test. \emph{American Journal of Human Genetics}, 64, 1177-1185.
+Knapp, M. (1999). A Note on Power Approximations for the Transmission/Disequilibrium Test. \emph{American Journal of Human Genetics}, 64, 1177-1185.
+
+Neumann, C., Taub, M.A., Younkin, S.G., Beaty, T.H., Ruczinski, I., Schwender, H. (2014). Analytic Power and Sample Size Calculation
+for the Genotypic Transmission/Disequilibrium Test in Case-Parent Trio Studies. Submitted.
 }
+
 \author{
 Christoph Neumann
 }

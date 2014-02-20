@@ -46,7 +46,7 @@ fastGxG <- function(mat.snp, model=c("additive", "dominant", "recessive"), genes
 	names(beta) <- names(stat) <- names(pval) <- paste(cn[combs[,1]], cn[combs[,2]], sep=" : ")
 	if(!is.null(genes))
 		genes <- paste(genes[combs[,1]], genes[combs[,2]], sep=" : ")
-	out <- list(coef=beta, se=se, stat=stat, pval=pval, OR=exp(coef), lowerOR=lower, upperOR=upper, ia=TRUE,
+	out <- list(coef=beta, se=se, stat=stat, pval=pval, RR=exp(coef), lowerRR=lower, upperRR=upper, ia=TRUE,
 		type=modeltype, add=FALSE, genes=genes, maf=NULL, matMAF=NULL)
 	class(out) <- "colTDT"
 	out

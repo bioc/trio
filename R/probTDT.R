@@ -54,7 +54,7 @@ probTDTsplit<-function (geno, size = 50)
             1:nrow(geno), sep = "")
     else names(beta) <- names(stat) <- names(pval) <- names(usedTrios) <- names(pMendelErr) <- rownames(geno)
     out <- list(coef = beta, se = se, stat = stat, pval = pval, 
-        OR = exp(beta), lowerOR = lower, upperOR = upper, ia = FALSE, 
+        RR = exp(beta), lowerRR = lower, upperRR = upper, ia = FALSE, 
         type = "additive", usedTrios=usedTrios, add = FALSE, pMendelErr=pMendelErr)
 	class(out)<-"colTDT"
     out
@@ -132,7 +132,7 @@ probTDTdomSplit<-function (geno, size = 50)
             1:nrow(geno), sep = "")
     else names(beta) <- names(stat) <- names(pval) <- names(usedTrios) <- names(pMendelErr) <- rownames(geno)
     out <- list(coef = beta, se = se, stat = stat, pval = pval, 
-        OR = exp(beta), lowerOR = lower, upperOR = upper, ia = FALSE, 
+        RR = exp(beta), lowerRR = lower, upperRR = upper, ia = FALSE, 
         type = "dominant", usedTrios = usedTrios, add = FALSE, pMendelErr = pMendelErr)
     class(out) <- "colTDT"
     out
@@ -214,7 +214,7 @@ probTDTrecSplit<-function (geno, size = 50)
             1:nrow(geno), sep = "")
     else names(beta) <- names(stat) <- names(pval) <- names(usedTrios) <- rownames(geno)
     out <- list(coef = beta, se = se, stat = stat, pval = pval, 
-        OR = exp(beta), lowerOR = lower, upperOR = upper, ia = FALSE, 
+        RR = exp(beta), lowerRR = lower, upperRR = upper, ia = FALSE, 
         type = "recessive", usedTrios = usedTrios, add = FALSE, pMendelErr=pMendelErr)
     class(out) <- "colTDT"
     out

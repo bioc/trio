@@ -47,7 +47,7 @@ colGxEPerms(mat.snp, env, model = c("additive", "dominant", "recessive"),
 }
   \item{size}{the number of SNPs considered simultaneously when computing the parameter estimates.
 }
-  \item{addGandE}{should the ORs and their confidence intervals for the exposed cases be added to the output?}
+  \item{addGandE}{should the relative risks and their confidence intervals for the exposed cases be added to the output?}
   \item{whichLRT}{character string specifying which likelihood ratio test should be added to the output. If \code{"2df"}, 2 degree of
     freedom likelihood ratio tests comparing the fitted models (containing one parameter for the SNP and one for the gene-environment
     interaction) with models containing no factor will be performed. If \code{"1df"}, one degree of freedom likelihood ratio
@@ -78,9 +78,9 @@ For \code{colGxE}, an object of class \code{colGxE} consisting of the following 
 \item{coef}{the estimated parameter,}
 \item{se}{the estimated standard deviation of the parameter estimate,}
 \item{stat}{Wald statistic,}
-\item{OR}{the odds ratio, i.e.\ \code{exp(coef)}},
-\item{lowerOR}{the lower bound of the 95\% confidence interval for \code{OR},}
-\item{upperOR}{the upper bound of the 95\% confidence interval for \code{OR},}
+\item{RR}{the relative risk, i.e.\ in the case of trio data, \code{exp(coef)} (see Schaid, 1996),}
+\item{lowerRR}{the lower bound of the 95\% confidence interval for \code{RR},}
+\item{upperRR}{the upper bound of the 95\% confidence interval for \code{RR},}
 \item{usedTrios}{the number of trios affecting the parameter estimation,}
 \item{env}{vector containing the values of the environmental factor,}
 \item{type}{\code{model},}
@@ -114,6 +114,9 @@ and if \code{addPerms = TRUE}
 Gauderman, W.J., Thomas, D.C., Murcray, C.E., Conti, D., Li, D., and Lewinger, J.P. (2010).
 Efficient Genome-Wide Association Testing of Gene-Environment Interaction in Case-Parent Trios.
 \emph{American Journal of Epidemiology}, 172, 116-122.
+
+Schaid, D.J. (1996). General Score Tests for Associations of Genetic Markers with Disease Using Cases and Their Parents.
+\emph{Genetic Epidemiology}, 13, 423-449.
 
 Schwender, H., Taub, M.A., Beaty, T.H., Marazita, M.L., and Ruczinski, I. (2011). 
 Rapid Testing of SNPs and Gene-Environment Interactions in Case-Parent Trio Data Based on 

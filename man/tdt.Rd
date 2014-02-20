@@ -54,14 +54,17 @@ An object of class \code{tdt} or \code{colTDT} consisting of the following numer
 \item{coef}{the estimated parameter,}
 \item{se}{the estimated standard deviation of the parameter estimate,}
 \item{stat}{Wald statistic,}
-\item{OR}{the odds ratio, i.e.\ \code{exp(coef)}},
-\item{lowerOR}{the lower bound of the 95\% confidence interval for \code{OR},}
-\item{upperOR}{the upper bound of the 95\% confidence interval for \code{OR},}
+\item{RR}{the relative risk, i.e.\ for trio data, \code{exp(coef)} (see Schaid, 1996),}
+\item{lowerRR}{the lower bound of the 95\% confidence interval for \code{RR},}
+\item{upperRR}{the upper bound of the 95\% confidence interval for \code{RR},}
 \item{usedTrios}{the number of trios affecting the parameter estimation (only for \code{colTDT}),}
 \item{...}{further internal parameters}
 }
 
 \references{
+Schaid, D.J. (1996). General Score Tests for Associations of Genetic Markers with Disease Using Cases and Their Parents.
+\emph{Genetic Epidemiology}, 13, 423-449.
+
 Schwender, H., Taub, M.A., Beaty, T.H., Marazita, M.L., and Ruczinski, I. (2011). 
 Rapid Testing of SNPs and Gene-Environment Interactions in Case-Parent Trio Data Based on 
 Exact Analytic Parameter Estimation. \emph{Biometrics}, 68, 766-773. 

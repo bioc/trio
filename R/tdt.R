@@ -35,14 +35,14 @@ tdt <- function(snp, model=c("additive", "dominant", "recessive")){
 	stat <- (coef/se)^2
 	conf <- exp(coef + c(-1, 1) * qnorm(0.975) * se)
 	out <- list(coef=coef, se=se, stat=stat, pval= 1 - pchisq(stat, 1),
-		OR=exp(coef), lowerOR=conf[1], upperOR=conf[2], ia=FALSE, type=type)  
+		RR=exp(coef), lowerRR=conf[1], upperRR=conf[2], ia=FALSE, type=type)  
 	class(out) <- "tdt"
 	out
 }
 
 print.tdt <- function(x, digits=4, ...){
 	pval <- format.pval(x$pval, digits=digits)
-	out <- data.frame(Coef=x$coef, OR=x$OR, Lower=x$lowerOR, Upper=x$upperOR, 
+	out <- data.frame(Coef=x$coef, RR=x$RR, Lower=x$lowerRR, Upper=x$upperRR, 
 		SE=x$se, Statistic=x$stat, "p-Value"=pval, check.names=FALSE)
 	if(length(x$coef)==1)
 		rownames(out) <- ""
@@ -161,7 +161,7 @@ tdtGxG <- function(snp1, snp2, test=c("epistatic", "lrt", "full", "screen"), mod
 		upper <- exp(coef + qnorm(0.975) * se)
 	}
 	out <- list(coef=coef, se=se, stat=stat, pval= pval,
-		OR=exp(coef), lowerOR=lower, upperOR=upper, ia=TRUE, type=type)  
+		RR=exp(coef), lowerRR=lower, upperRR=upper, ia=TRUE, type=type)  
 	class(out) <- "tdt"
 	out
 
@@ -294,8 +294,8 @@ colGxG <- function(mat.snp, test=c("epistatic", "lrt", "full", "screen"), genes=
 	}
 	else
 		mat.maf <- NULL
-	out <- list(coef=coef, se=se, stat=stat, pval=pval, OR=exp(coef), 
-		lowerOR=lower, upperOR=upper, ia=TRUE, type=type, add=add, genes=genes, maf=valMAF,
+	out <- list(coef=coef, se=se, stat=stat, pval=pval, RR=exp(coef), 
+		lowerRR=lower, upperRR=upper, ia=TRUE, type=type, add=add, genes=genes, maf=valMAF,
 		matMAF=mat.maf) 
 	class(out) <- "colTDT"
 	out	
@@ -306,14 +306,14 @@ colGxG <- function(mat.snp, test=c("epistatic", "lrt", "full", "screen"), genes=
 print.colTDT <- function(x, top=5, digits=4, ...){
 	pval <- format.pval(x$pval, digits=digits)
 	if(x$ia){
-		out <- data.frame(Coef=x$coef, OR=x$OR, Lower=x$lowerOR, Upper=x$upperOR, 
+		out <- data.frame(Coef=x$coef, RR=x$RR, Lower=x$lowerRR, Upper=x$upperRR, 
 			SE=x$se, Statistic=x$stat, "p-Value"=pval,
 			check.names=FALSE, stringsAsFactors=FALSE)
 		cat("      Genotypic TDT for Two-Way Interaction (Using 15 Pseudo Controls)",
 			"\n\n")
 	}
 	else{
-		out <- data.frame(Coef=x$coef, OR=x$OR, Lower=x$lowerOR, Upper=x$upperOR, 
+		out <- data.frame(Coef=x$coef, RR=x$RR, Lower=x$lowerRR, Upper=x$upperRR, 
 			SE=x$se, Statistic=x$stat, "p-Value"=pval, Trios=x$usedTrios,
 			check.names=FALSE, stringsAsFactors=FALSE)
 		if(!is.null(x$pMendelErr))

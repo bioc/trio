@@ -224,10 +224,11 @@ tdt(mat.test[,1])
 @
 
 In this case, a conditional logistic regression is fitted, and the output of \texttt{tdt} contains the
-parameter estimate \texttt{Coef} for the SNP in this model, the odds ratio \texttt{OR}, the \texttt{Lower}
-and \texttt{Upper} bound of the 95\% confidence interval of this odds ratio, the standard error \texttt{SE}
+parameter estimate \texttt{Coef} for the SNP in this model, the relative risk \texttt{RR}, the \texttt{Lower}
+and \texttt{Upper} bound of the 95\% confidence interval of this relative risk, the standard error \texttt{SE}
 of the parameter estimate, the Wald \texttt{Statistic} for testing whether this SNP has an effect, and
-the corresponding \texttt{p-Value}.
+the corresponding \texttt{p-Value}. Note that in the case of trio data, \texttt{exp(Coef)} is an unbiased 
+estimate for the relative risk, not for the odds ratio \citep{schaid1996}.
 
 By default, an additive effect is tested. It is, however, also possible to consider a dominant effect
 <<>>=
@@ -380,12 +381,12 @@ to the other gTDT functions, a dominant or a recessive effect can also be consid
 \texttt{colGxE}. 
 
 For both $\beta_\text{G}$ and $\beta_\text{GxE}$, the same as statistics as, for example, in \texttt{colTDT}, are computed.
-Additionally, the odds ratios and their confidence intervals for the exposed trios are determined (note that the odds ratios for
+Additionally, the relative risks and their confidence intervals for the exposed trios are determined (note that the relative risks for
 the unexposed trios are given by $\exp\left(\beta_\text{G}\right)$), and a 2 degree of freedom Wald test for testing both
 $\beta_\text{G}$ and $\beta_\text{GxE}$ simultaneously as well as two likelihood ratio tests are performed, where the 2 df likelihood
 ratio test compares the likelihood of the full model (containing both $\beta_\text{G}$ and $\beta_\text{GxE}$) with the likelihood of a null model
 containing no variable, and the 1 df likelihood ratio test compares the likelihoods of the full model and a model only consisting
-of the SNP. The computation of all these statistics can be avoided by setting \texttt{addGandE = FALSE} (for the odds ratio of the
+of the SNP. The computation of all these statistics can be avoided by setting \texttt{addGandE = FALSE} (for the relative risk of the
 exposed cases), \texttt{add2df = FALSE} (for the 2 df Wald test) and \texttt{whichLRT = "none"} for the two likelihood ratio tests.
 
 If these statistics should be determined, but only the results for the genotypic TDT for testing the gene-environment interaction
@@ -896,7 +897,7 @@ the frequencies for the individual SNPs are displayed.
 \caption{Values of the importance measure of trioFS for the five most important identified SNP interactions.}\label{fig:fs}
 \end{figure} 
 
-\section{Analysis of Trio Data with trioFS}\label{trioFS}
+\section{Analysis of Trio Data with trioFS}\label{triofs}
 
 Another way to quantify the importance of SNPs and SNP interactions for the prediction of the disease risk is to apply trio logic
 regression to several subsets of the case-parent trio data and then employ the resulting trio logic regression models to compute

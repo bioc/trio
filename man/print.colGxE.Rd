@@ -25,8 +25,8 @@ getGxEstats(x, top = NA, sortBy = c("none", "gxe", "lrt2df", "wald2df", "lrt1df"
     if \code{sortBy = "none"}.
 }
   \item{onlyGxE}{logical indicating whether only the statistics for the parameter of the GxE interaction should be printed.
-    If \code{FALSE}, the statistics for both parameters in the model as well as the odds ratios for the exposed trios and statistics for
-    the 2 df likelihood ratio test and the 2 df Wald test (if these odds ratios and statistics were computed by \code{\link{colGxE}})
+    If \code{FALSE}, the statistics for both parameters in the model as well as the relative risks for the exposed trios and statistics for
+    the 2 df likelihood ratio test and the 2 df Wald test (if these relative risks and statistics were computed by \code{\link{colGxE}})
     are shown.
 }
   \item{digits}{number of digits that should be printed.}

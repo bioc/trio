@@ -91,7 +91,7 @@ colGxE <- function(mat.snp, env, model=c("additive", "dominant", "recessive"), a
 	lower <- exp(beta - qnorm(0.975) * se)
 	upper <- exp(beta + qnorm(0.975) * se)
 	pval <- pchisq(stat, 1, lower.tail=FALSE)
-	out <- list(coef=beta[,1:2], se=se[,1:2], stat=stat, pval=pval, OR=exp(beta), lowerOR=lower, upperOR=upper,
+	out <- list(coef=beta[,1:2], se=se[,1:2], stat=stat, pval=pval, RR=exp(beta), lowerRR=lower, upperRR=upper,
 		usedTrios=used, env=env, type=type, addGandE=addGandE, addOther=c(addLRT2, add2df, addLRT1), 
 		n.select=ncol(mat.snp))
 	if(alpha1<1)
@@ -209,10 +209,10 @@ print.colGxE <- function(x, top=5, digits=4, onlyGxE=FALSE, ...){
 	if(x$n.select>0){
 		if(!onlyGxE){
 			pvalG <- format.pval(x$pval[,1], digits=digits)
-			outG <- data.frame(Coef=x$coef[,1], OR=x$OR[,1], Lower=x$lowerOR[,1], Upper=x$upperOR[,1],
+			outG <- data.frame(Coef=x$coef[,1], RR=x$RR[,1], Lower=x$lowerRR[,1], Upper=x$upperRR[,1],
 				SE=x$se[,1], Statistic=x$stat[,1], "p-value"=pvalG, check.names=FALSE, stringsAsFactors=FALSE)
 			if(any(x$addGandE))
-				outOR <- data.frame(OR=x$OR[,3], Lower=x$lowerOR[,3], Upper=x$upperOR[,3], check.names=FALSE,
+				outOR <- data.frame(RR=x$RR[,3], Lower=x$lowerRR[,3], Upper=x$upperRR[,3], check.names=FALSE,
 					stringsAsFactors=FALSE)
 			if(any(x$addOther)){
 				outMore <- data.frame(row.names=rownames(outG))
@@ -232,7 +232,7 @@ print.colGxE <- function(x, top=5, digits=4, onlyGxE=FALSE, ...){
 			
 		}
 		pvalGE <- format.pval(x$pval[,2], digits=digits)
-		outGE <- data.frame(Coef=x$coef[,2], OR=x$OR[,2], Lower=x$lowerOR[,2], Upper=x$upperOR[,2],
+		outGE <- data.frame(Coef=x$coef[,2], RR=x$RR[,2], Lower=x$lowerRR[,2], Upper=x$upperRR[,2],
 			SE=x$se[,2], Statistic=x$stat[,2], "p-value"=pvalGE, Trios0=x$usedTrios[,1],
 			Trios1=x$usedTrios[,2], check.names=FALSE, stringsAsFactors=FALSE)
 	}
@@ -265,7 +265,7 @@ print.colGxE <- function(x, top=5, digits=4, onlyGxE=FALSE, ...){
 			cat("\n\n", "Effects of the SNPs in the Corresponding GxE Models:\n", sep="")
 			print(format(outG, digits=digits))
 			if(x$addGandE){
-				cat("\n\n", "ORs for Exposed Cases:\n", sep="")
+				cat("\n\n", "RRs for Exposed Cases:\n", sep="")
 				print(format(outOR, digits=digits))
 			}
 			if(any(x$addOther)){
@@ -290,12 +290,12 @@ getGxEstats <- function(x, top=NA, sortBy=c("none", "gxe", "lrt2df", "wald2df", 
 		if(top <= 0 | top>nrow(x$pval))
 			top <- NA
 	}		
-	dat <- data.frame("Coef GxE"=x$coef[,2], "OR GxE"=x$OR[,2], "Lower GxE"=x$lowerOR[,2], "Upper GxE"=x$upperOR[,2],
+	dat <- data.frame("Coef GxE"=x$coef[,2], "RR GxE"=x$RR[,2], "Lower GxE"=x$lowerRR[,2], "Upper GxE"=x$upperRR[,2],
 		"SE GxE"=x$se[,2], "Stat GxE"=x$stat[,2], "pval GxE"=x$pval[,2], "Trios0"=x$usedTrios[,1],
-		Trios1=x$usedTrios[,2], "Coef G"=x$coef[,1], "OR G"=x$OR[,1], "Lower G"=x$lowerOR[,1], "Upper G"=x$upperOR[,1],
+		Trios1=x$usedTrios[,2], "Coef G"=x$coef[,1], "RR G"=x$RR[,1], "Lower G"=x$lowerRR[,1], "Upper G"=x$upperRR[,1],
 		"SE G"=x$se[,1], "Stat G"=x$stat[,1], "pval G"=x$pval[,1], check.names=FALSE, stringsAsFactors=FALSE)
 	if(x$addGandE)
-		dat <- data.frame(dat, "OR G&E"=x$OR[,3], "Lower G&E"=x$lowerOR[,3], "Upper G&E"=x$upperOR[,3], 
+		dat <- data.frame(dat, "RR G&E"=x$RR[,3], "Lower G&E"=x$lowerRR[,3], "Upper G&E"=x$upperRR[,3], 
 			check.names=FALSE, stringsAsFactors=FALSE)
 	if(x$addOther[1])
 		dat <- data.frame(dat, "Stat LRT 2df"=x$lrt2df[,1], "pval LRT 2df"=x$lrt2df[,2], check.names=FALSE, 

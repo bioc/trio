@@ -31,7 +31,7 @@ fastTDTsplit <- function(geno, size=50){
 		names(beta) <- names(stat) <- names(pval) <- names(used) <- paste("SNP", 1:ncol(geno), sep="")
 	else
 		names(beta) <- names(stat) <- names(pval) <- names(used) <- colnames(geno)
-	out <- list(coef=beta, se=se, stat=stat, pval=pval, OR=exp(beta), lowerOR=lower, upperOR=upper,
+	out <- list(coef=beta, se=se, stat=stat, pval=pval, RR=exp(beta), lowerRR=lower, upperRR=upper,
 		ia=FALSE, type="additive", usedTrios=used, add=FALSE)
 	class(out) <- "colTDT"
 	out
@@ -83,7 +83,7 @@ fastTDTdomSplit <- function(geno, size=50){
 		names(beta) <- names(stat) <- names(pval) <- names(used) <- paste("SNP", 1:ncol(geno), sep="")
 	else
 		names(beta) <- names(stat) <- names(pval) <- names(used) <- colnames(geno)
-	out <- list(coef=beta, se=se, stat=stat, pval=pval, OR=exp(beta), lowerOR=lower, upperOR=upper,
+	out <- list(coef=beta, se=se, stat=stat, pval=pval, RR=exp(beta), lowerRR=lower, upperRR=upper,
 		ia=FALSE, type="dominant", usedTrios=used, add=FALSE)
 	class(out) <- "colTDT"
 	out
@@ -128,7 +128,7 @@ fastTDTrecSplit <- function(geno, size=50){
 		names(beta) <- names(stat) <- names(pval) <- names(used) <- paste("SNP", 1:ncol(geno), sep="")
 	else
 		names(beta) <- names(stat) <- names(pval) <- names(used) <- colnames(geno)
-	out <- list(coef=beta, se=se, stat=stat, pval=pval, OR=exp(beta), lowerOR=lower, upperOR=upper,
+	out <- list(coef=beta, se=se, stat=stat, pval=pval, RR=exp(beta), lowerRR=lower, upperRR=upper,
 		ia=FALSE, type="recessive", usedTrios=used, add=FALSE)
 	class(out) <- "colTDT"
 	out
