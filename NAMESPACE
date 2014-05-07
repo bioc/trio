@@ -18,7 +18,8 @@ getLDlarge,
 trio.power,
 probTDT,
 colPOlrt, colTAT,
-vcf2geno
+vcf2geno,
+colEMlrt
 )
 
 S3method(plot, getLD)
@@ -43,6 +44,7 @@ S3method(plot, getLDlarge)
 S3method(print, trio.power)
 S3method(print, polrt)
 S3method(print, tat)
+S3method(print, colEMlrt)
 S3method(trioLR, default)
 S3method(trioLR, trioPrepare)
 S3method(trioLR, formula)
