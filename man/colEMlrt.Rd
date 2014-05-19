@@ -11,7 +11,7 @@ matrix in genotype format.
 }
 \usage{
 colEMlrt(mat.snp, model = c("general", "dominant", "recessive"), maternal = FALSE, 
-     iter = 40, eps = 10^-16)
+     parentMissing = c("father", "mother", "either"), iter = 40, eps = 10^-16)
 
 \method{print}{colEMlrt}(x, top = 5, digits = 4, ...)
 }
@@ -32,6 +32,12 @@ colEMlrt(mat.snp, model = c("general", "dominant", "recessive"), maternal = FALS
   \item{maternal}{logical specifying whether parameters for a maternal effects should be added to the Poisson regression model. 
 	   If \code{TRUE} and \code{model = "general"}, the most general model described by Weinberg (1999)
 		 is used.
+}
+\item{parentMissing}{a character string specifying whether the genotype of the \code{father}, the \code{mother}, or \code{either} 
+   the mother or the father is allowed to be missing. By default, only the genotype of the father is allowed to be missing in a trio.
+	 Thus, in this case, all complete trios and all trios in which data are available for the father and the offspring are used in the
+	 testing of the considered SNP. If \code{parentMissing = "either"}, all trios in which the genotype of the offspring or the genotypes
+	 of both parents are missing for a particular SNP are ignored in the analysis of this SNP.
 }
   \item{iter}{a non-negative numeric value specifying the maximum number of iterations that should be used in the application of the expectation maximization algorithm.
 }
@@ -57,8 +63,6 @@ trios for the 15 different genotype combinations
 possible in a trio (when considering the genotypes of mothers and fathers individually) and a likelihood ratio test based
 on two nested Poisson regression models using the estimated expected numbers of trios as outcome.
 
-In \code{colEMlrt}, the genotypes of (some of) the fathers is allowed to be missing. If the genotype of a mother or an offspring is missing
-for a particular SNP, the corresponding trio is still removed from the analysis of this SNP.  
 }
 
 \value{
