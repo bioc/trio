@@ -1,5 +1,5 @@
-vcf2geno <- function(vcf, ped, none="0/0", one=c("0/1"), both="1/1", use.rownames=FALSE, allowDifference=FALSE,
-		removeMonomorphic=TRUE, changeMinor=FALSE){
+vcf2geno <- function(vcf, ped, none="0/0", one=c("0/1"), both="1/1", na.string=".", use.rownames=FALSE, 
+		allowDifference=FALSE, removeMonomorphic=TRUE, removeNonBiallelic=TRUE, changeMinor=FALSE){
 	if(!is(vcf, "CollapsedVCF") & !is.matrix(vcf))
 		stop("vcf must be either a matrix or an object of class collapsedVCF")
 	if(is(vcf, "CollapsedVCF")){
@@ -67,10 +67,22 @@ vcf2geno <- function(vcf, ped, none="0/0", one=c("0/1"), both="1/1", use.rowname
 			stop("All subjects in ped must also appear (with the same ID) in vcf.")
 	}
 	nr <- min(nrow(vcf), 100)
-	if(!any(vcf =="0/0"))
+	if(!any(vcf == none[1]))
 		stop("None of the genotypes in the first ", nr, " rows of the genotype matrix\n",
-			"contains a genotype coded by none.")
-	geno <- matrix(NA, nrow=nrow(vcf), ncol=ncol(vcf), dimnames=dimnames(vcf))
+			"contains a genotype coded by (the first entry in) none.")
+	if(removeNonBiallelic){
+		geno <- matrix(-1, nrow=nrow(vcf), ncol=ncol(vcf), dimnames=dimnames(vcf))
+		if(any(is.na(na.string))){
+			geno[is.na(vcf)] <- NA
+			na.string <- na.string[!is.na(na.string)]
+		}
+		if(length(na.string) == 1)
+			geno[vcf == na.string] <- NA
+		if(length(na.string) > 1)
+			geno[vcf %in% na.string] <- NA
+	}
+	else
+		geno <- matrix(NA, nrow=nrow(vcf), ncol=ncol(vcf), dimnames=dimnames(vcf))
 	if(length(none) == 1)
 		geno[vcf == none] <- 0
 	else
@@ -94,18 +106,28 @@ vcf2geno <- function(vcf, ped, none="0/0", one=c("0/1"), both="1/1", use.rowname
 		}
 	
 	}
-	#return(list(geno=geno, vec=vec.ids, vcf=vcf, ped=ped))		
+	#return(list(geno=geno, vec=vec.ids, vcf=vcf, ped=ped))	
 	mat.trio <- t(geno[,vec.ids])
 	if(is.null(colnames(mat.trio)))
 		colnames(mat.trio) <- paste("SNV", 1:ncol(mat.trio), sep="")
+	if(removeNonBiallelic){
+		idsMore <- colSums(mat.trio == -1, na.rm=TRUE) > 0
+		if(any(idsMore)){
+			mat.trio <- mat.trio[,!idsMore]
+			warning("Since ", sum(idsMore), " of the SNVs show other/addtional genotypes than/to\n",
+				"the ones specified by none, one, and both, these SNVs are removed.")
+		}
+	}
 	if(changeMinor){
 		idsMAF <- colMAFtrio(mat.trio) > 0.5
 		mat.trio[,idsMAF] <- 2 - mat.trio[,idsMAF]
 	}
 	if(removeMonomorphic){
 		idsMono <- colMeans(mat.trio, na.rm=TRUE) == 0
-		mat.trio <- mat.trio[,!idsMono]
-		warning("Since ", sum(idsMono), " of the SNVs were monomorphic, these SNVs were removed.")
+		if(any(idsMono)){
+			mat.trio <- mat.trio[,!idsMono]
+			warning("Since ", sum(idsMono), " of the SNVs were monomorphic, these SNVs were removed.")
+		}
 	}
 	mat.trio
 }

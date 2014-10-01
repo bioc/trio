@@ -8,8 +8,9 @@ Transformation of VFC File
 Transforms a vcf file into a matrix in genotype format required by, e.g., the functions for computing the genotypic TDT.
 }
 \usage{
-vcf2geno(vcf, ped, none = "0/0", one = c("0/1"), both = "1/1", use.rownames = FALSE, 
-    allowDifference = FALSE, removeMonomorphic = TRUE, changeMinor = FALSE)
+vcf2geno(vcf, ped, none = "0/0", one = c("0/1"), both = "1/1", na.string = ".",
+    use.rownames = FALSE, allowDifference = FALSE, removeMonomorphic = TRUE, 
+		removeNonBiallelic = TRUE, changeMinor = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -30,6 +31,8 @@ vcf2geno(vcf, ped, none = "0/0", one = c("0/1"), both = "1/1", use.rownames = FA
 }
   \item{both}{a character string or vector specifying the coding for the homozygous variant genotype.
 }
+  \item{na.string}{a character string or vector specifying how missing values are coded in the vcf file.
+}
   \item{use.rownames}{a logical value specifying whether the row names of \code{ped} correspond to the sample names in 
 	  \code{vcf}. For details, see \code{vcf}.
 }
@@ -39,6 +42,10 @@ vcf2geno(vcf, ped, none = "0/0", one = c("0/1"), both = "1/1", use.rownames = FA
 		\code{vcf} and \code{ped}.
 }
   \item{removeMonomorphic}{a logical value specifying whether monomorphic SNVs should be removed from the output.
+}
+  \item{removeNonBiallelic}{a logical value specifying whether SNVs showing other genotypes than
+	   the ones specified by \code{none}, \code{one}, and \code{both} (which are, therefore, assumed
+		 to show more than two alleles) should be removed.
 }
   \item{changeMinor}{a logical value specifying whether the coding of the genotypes should be changed for SNVs for which the 
 	  default coding leads to a minor allele frequency larger than 0.5. The genotypes are coded by the number of minor alleles,
