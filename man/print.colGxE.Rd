@@ -1,6 +1,7 @@
 \name{print.colGxE}
 \alias{print.colGxE}
 \alias{getGxEstats}
+\alias{print.colGxEunstruct}
 \title{
 Printing and Storing of colGxE objects
 }
@@ -10,6 +11,8 @@ containing these statistics.
 }
 \usage{
 \method{print}{colGxE}(x, top = 5, digits = 4, onlyGxE = FALSE, ...)
+
+\method{print}{colGxEunstruct}(x, top = 5, digits = 4, ...)
 
 getGxEstats(x, top = NA, sortBy = c("none", "gxe", "lrt2df", "wald2df", "lrt1df", "g"))
 }

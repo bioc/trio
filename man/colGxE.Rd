@@ -11,15 +11,17 @@ Gauderman et al. (2010) will be used to first select all SNPs showing a p-value 
 in a logistic regression of the environmental factor against the sums of the codings for the parents' genotypes at the respective 
 SNP. In the second step, the genotypic TDT is then applied to the selected SNPs.
 
+If \code{unstructured = TRUE}, all fully parameterized model is considered and a likelihood ratio test is performed.
+
 While \code{colGxE} computes the p-values based on asymptotic ChiSquare-distributions, 
-\code{colGxEPerms} can be used to determine permutation-based p-values. Currently, no two-step procedure is
-provided for \code{colGxEPerms}.
+\code{colGxEPerms} can be used to determine permutation-based p-values for the basic genotypic TDT (i.e. for \code{colGxE}
+using \code{alpha = 1} and \code{unstructured = FALSE}. 
 }
 
 \usage{
 colGxE(mat.snp, env, model = c("additive", "dominant", "recessive"), 
    alpha1 = 1, size = 50, addGandE = TRUE, whichLRT = c("both", "2df", "1df", "none"),
-   add2df = TRUE, addCov = FALSE, famid=NULL)
+   add2df = TRUE, addCov = FALSE, famid = NULL, unstructured = FALSE)
    
 colGxEPerms(mat.snp, env, model = c("additive", "dominant", "recessive"),
    B = 10000, size = 20, addPerms = TRUE, famid = NULL, rand = NA)
@@ -63,6 +65,10 @@ colGxEPerms(mat.snp, env, model = c("additive", "dominant", "recessive"),
     variable in \code{env}. Can be used to reorder the vector \code{env} when the order of the trios differs between \code{env} and
     \code{mat.snp}.
 }
+  \item{unstructured}{should a fully parameterized model be fitted? If \code{TRUE}, a 2 df likelihood ratio test is performed comparing a
+	  gTDT model containing one indicator variable for the heterozygous genotype and one for the homozygous variant genotype with a gTDT model
+		additionally containing two terms for the interactions between these variables and the environmental factor. In this case, only
+		the arguments \code{mat.snp}, \code{env}, and \code{famid} are considered.}
   \item{B}{number of permutations.}
   \item{addPerms}{should the matrices containing the permuted values of the test statistics for the SNP and the gene-environment
     interaction be added to the output?}
@@ -73,7 +79,7 @@ A conditional logistic regression model including two parameters, one for \eqn{G
 \eqn{G} is specified according to \code{model}.
 }
 \value{
-For \code{colGxE}, an object of class \code{colGxE} consisting of the following numeric matrices with two columns (one for each parameter):
+For \code{colGxE} with \code{unstructured=FALSE}, an object of class \code{colGxE} consisting of the following numeric matrices with two columns (one for each parameter):
 
 \item{coef}{the estimated parameter,}
 \item{se}{the estimated standard deviation of the parameter estimate,}
@@ -96,6 +102,13 @@ and depending on the specifications in \code{colGxE}
   and the second the corresponding p-values,}
 \item{lrt1df}{a numeric matrix with two columns, in which the first column contains the values of the 2 df likelihood ratio test statistic
   and the seocnd the corresponding p-values.}
+	
+For \code{colGxE} with \code{unstructured=TRUE}, an object of class \code{colGxEunstruct} consisting of the following vectors:
+
+\item{ll.main}{the loglikelihoods of the models containing only the two main effects,}
+\item{ll.full}{the loglikelihoods of the models additionally containing the two main effects and the two interaction effects,}
+\item{stat}{the values of the test statistic of the likelihood ratio test,}
+\item{pval}{the corresponding p-values.} 
 
 For \code{colGxEPerms}, 
 \item{stat}{a matrix with two columns containing the values of gTDT statistics for the main effects of the SNPs and the

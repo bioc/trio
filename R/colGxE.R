@@ -1,5 +1,6 @@
-colGxE <- function(mat.snp, env, model=c("additive", "dominant", "recessive"), alpha1=1, size=50, addGandE=TRUE,
-		whichLRT=c("both", "2df", "1df", "none"), add2df=TRUE, addCov=FALSE, famid=NULL){
+colGxE <- function(mat.snp, env, model=c("additive", "dominant", "recessive"), alpha1=1, size=50, 
+		addGandE=TRUE, whichLRT=c("both", "2df", "1df", "none"), add2df=TRUE, addCov=FALSE, 
+		famid=NULL, unstructured=FALSE){
 	if (!is.matrix(mat.snp)) 
         	stop("mat.snp has to be a matrix.")
     	if (nrow(mat.snp)%%3 != 0) 
@@ -10,8 +11,6 @@ colGxE <- function(mat.snp, env, model=c("additive", "dominant", "recessive"), a
             		"as the names of the rows are missing.")
     	if (any(!mat.snp %in% c(0, 1, 2, NA))) 
         	stop("The values in mat.snp must be 0, 1, and 2.")
-	if(size<1)
-		stop("size should be at least 1.")
 	if(length(env)!=nrow(mat.snp)/3)
 		stop("The length of env must be equal to the number of trios in mat.snp.")
 	if(!is.null(famid))
@@ -25,6 +24,10 @@ colGxE <- function(mat.snp, env, model=c("additive", "dominant", "recessive"), a
 		stop("The values in env must be 0 and 1.")
 	if(sum(env)<5 | sum(1-env)<5)
 		stop("Each of the two groups specified by env must contain at least 5 trios.")
+	if(unstructured)
+		return(colGxEunstructured(mat.snp, env, famid=famid))
+	if(size<1)
+		stop("size should be at least 1.")
 	if(alpha1 > 1 | alpha1 <= 0)
 		stop("alpha1 must be larger than 0 and smaller than or equal to 1.") 
 	typeLRT <- match.arg(whichLRT)
@@ -477,5 +480,73 @@ compVarEvsG2 <- function(coef, matA){
 	b0b0/detInfo
 }
 
+
+colGxEunstructured <- function(mat.snp, env, famid=NULL){
+	require(survival)
+	mat.code <- matrix(c(0,0,0,0, 0,0,1,1, 0,0,1,1, 1,0,0,1, 1,0,0,1, 1,1,1,1, 
+		1,1,1,1, 2,2,2,2, 1,1,2,2, 1,1,2,2, 2,1,1,2, 2,1,1,2, 0,1,1,2, 
+		1,0,1,2, 2,0,1,1, NA,NA,NA,NA), nrow=4)
+	cn <- c("000", "010", "100", "011", "101", "021", "201", "222", "121", "211",
+		"122", "212", "110", "111", "112", "NANANA")
+	colnames(mat.code) <- cn
+	n.snp <- ncol(mat.snp)
+	mat.pseudo <- matrix(NA, 4/3 * nrow(mat.snp), n.snp)
+	for(i in 1:n.snp){
+		mat.trio <- matrix(mat.snp[,i], ncol=3, byrow=TRUE)
+		mat.trio[rowSums(is.na(mat.trio)) > 0, ] <- NA
+		code <- paste(mat.trio[,1], mat.trio[,2], mat.trio[,3], sep="")
+		if(any(!code %in% cn)){
+			tmp.ids <- !code %in% cn
+			warning(sum(tmp.ids), " trios show Mendelian errors. These are removed.",
+				call.=FALSE)
+			code[tmp.ids] <- "NANANA"
+		}
+		mat.pseudo[,i] <- as.vector(mat.code[,code])
+	}
+	n.trio <- nrow(mat.snp) / 3
+	env2 <- rep(env, e=4)
+	strat <- rep(1:n.trio, e=4)
+	y <- rep.int(c(1, rep.int(0, 3)), n.trio) 
+	ll.main <- ll.full <- rep.int(NA, n.snp)
+	wa <- options()$warn
+	options(warn=2)
+	for(i in 1:n.snp){
+		x1 <- mat.pseudo[,i] == 1
+		x2 <- mat.pseudo[,i] == 2
+		x1e <- x1 * env2
+		x2e <- x2 * env2
+		woIA <- try(clogit(y ~ x1 + x2 + strata(strat)), silent=TRUE)
+		full <- try(clogit(y ~ x1 + x2 + x1e + x2e + strata(strat)), silent=TRUE)
+		ll.main[i] <- if(is(woIA, "try-error")) NA else woIA$loglik[2]
+		ll.full[i] <- if(is(full, "try-error")) NA else full$loglik[2]
+	}
+	options(warn=wa)
+	if(any(is.na(ll.full)) | any(is.na(ll.main)))
+		warning("For some interactions, the fitting of at least one of the models has failed.\n",
+			"Therefore, the corresponding test statistic and the p-value are thus set to NA.",
+			call.=FALSE)
+	stat <- -2 * (ll.main - ll.full)
+	pval <- pchisq(stat, 2, lower.tail=FALSE)
+	cn <- if(is.null(colnames(mat.snp))) paste("SNP", 1:n.snp, sep="") else colnames(mat.snp)	
+	names(ll.full) <- names(ll.main) <- names(stat) <- names(pval) <- cn
+	out <- list(ll.main=ll.main, ll.full=ll.full, stat=stat, pval=pval)
+	class(out) <- "colGxEunstruct"
+	out
+}
+	
+print.colGxEunstruct <- function(x, top=5, digits=4, ...){
+	pval <- format.pval(x$pval, digits=digits)
+	out <- data.frame("LL (with IA)"=x$ll.full, "LL (w/o IAs)"=x$ll.main, Statistic=x$stat,
+		"P-Value"=x$pval, check.names=FALSE)
+	cat("   Genotypic TDT for GxE Interactions Using a Fully Parameterized Model\n\n")
+	if(top > 0 && length(x$ll.main) > top){
+		ord <- order(x$pval)[1:top]
+		out <- out[ord,]
+		cat("Top", top, "GxE Interactions (Likelihood Ratio Test):\n")
+	}
+	else
+		cat("Likelihood Ratio Test:\n")
+	print(format(out, digits=digits))
+}
 
 

@@ -51,3 +51,5 @@ S3method(trioLR, formula)
 S3method(trioFS, default)
 S3method(trioFS, trioPrepare)
 S3method(trioFS, formula)
+S3method(print, colGxEunstruct)
+
