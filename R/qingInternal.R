@@ -10338,7 +10338,8 @@ function(str, delims){
      }
      i = i +1 
    }
-   if(idx.f+nchar(delims[i])<lastIdx) re = c(re, curStr) 
+   # if(idx.f+nchar(delims[i])<lastIdx) re = c(re, curStr) 
+   if(idx.f + 2 < lastIdx) re = c(re, curStr)
    return(re)
  }
 
