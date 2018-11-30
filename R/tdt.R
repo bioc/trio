@@ -1,5 +1,5 @@
 tdt <- function(snp, model=c("additive", "dominant", "recessive")){
-	require(survival)
+	requireNamespace("survival")
 	n <- length(snp)
 	if(n%%3 != 0)
 		stop("snp has a length not dividable by 3.")
@@ -67,7 +67,7 @@ tdt2way <- function(...)
 	cat("tdt2way has been renamed to tdtGxG. So please use tdtGxG instead.")
 
 tdtGxG <- function(snp1, snp2, test=c("epistatic", "lrt", "full", "screen"), model=c("additive", "dominant", "recessive")){
-	require(survival)
+	requireNamespace("survival")
 	n1 <- length(snp1)
 	n2 <- length(snp2)
 	if(n1 != n2)
@@ -190,7 +190,7 @@ colTDT2way <- function(...){
 
 colGxG <- function(mat.snp, test=c("epistatic", "lrt", "full", "screen"), genes=NULL, maf=FALSE,
 		model=c("additive", "dominant", "recessive")){
-	require(survival)
+	requireNamespace("survival")
 	if(!is.matrix(mat.snp))
 		stop("mat.snp has to be a matrix.")
 	if(nrow(mat.snp) %% 3 != 0)

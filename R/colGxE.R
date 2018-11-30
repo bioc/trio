@@ -482,7 +482,7 @@ compVarEvsG2 <- function(coef, matA){
 
 
 colGxEunstructured <- function(mat.snp, env, famid=NULL){
-	require(survival)
+	requireNamespace("survival", quietly=TRUE)
 	mat.code <- matrix(c(0,0,0,0, 0,0,1,1, 0,0,1,1, 1,0,0,1, 1,0,0,1, 1,1,1,1, 
 		1,1,1,1, 2,2,2,2, 1,1,2,2, 1,1,2,2, 2,1,1,2, 2,1,1,2, 0,1,1,2, 
 		1,0,1,2, 2,0,1,1, NA,NA,NA,NA), nrow=4)

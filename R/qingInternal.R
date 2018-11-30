@@ -4941,7 +4941,7 @@ function(data, cols=NULL, loci.ct, is.1digit=FALSE, dig1Code=c(0, 1, 2, 3), dig2
    if(ct==1){
 
      if(loci.ct>=2){
-       hap.re = haplo.em(geno=data, ...)
+       hap.re = haplo.stats::haplo.em(geno=data, ...)
        
        hap.prob = hap.re$hap.prob
     
@@ -4999,7 +4999,7 @@ function(data, cols=NULL, loci.ct, is.1digit=FALSE, dig1Code=c(0, 1, 2, 3), dig2
       if(loci.ct[i]!=1){
 		  allsnp = FALSE
           ## for Hap
-          hap.re = haplo.em(geno=data[, ((cut.rg[i,1]):(cut.rg[i,2]))], ...)
+          hap.re = haplo.stats::haplo.em(geno=data[, ((cut.rg[i,1]):(cut.rg[i,2]))], ...)
 
           # print(hap.re)
           hap.prob = hap.re$hap.prob

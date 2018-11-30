@@ -1,9 +1,8 @@
 trioLR <- function(x, ...) UseMethod("trioLR")
 
 trioLR.formula <- function(formula, data, recdom=TRUE, ...){
-	(require(logicFS, quietly=TRUE) && packageVersion("logicFS") >= "1.28.1") || 
-		stop("Package logicFS >= 1.28.1 is required.")
-	xy <- getXy(formula, data, recdom=recdom)
+	# requireNamespace("logicFS", quietly=TRUE)
+	xy <- logicFS::getXy(formula, data, recdom=recdom)
 	trioLR(xy$x, xy$y, ...)
 }
 
@@ -13,8 +12,7 @@ trioLR.trioPrepare <- function(x, ...){
 
 trioLR.default <- function(x, y, search=c("sa", "greedy", "mcmc"), nleaves=5, penalty=0, weights=NULL,
 		control=lrControl(), rand=NA, ...){
-	(require(LogicReg, quietly=TRUE) && packageVersion("LogicReg") >= "1.5.3") || 
-		stop("Package LogicReg >= 1.5.3 is required.")
+	# requireNamespace("LogicReg", quietly=TRUE) 
 	call <- match.call()
   	if(nrow(x)%%4 != 0)
     		stop("x does not seem to contain trio data with three pseudo-controls for each affected children\n",
@@ -34,8 +32,8 @@ trioLR.default <- function(x, y, search=c("sa", "greedy", "mcmc"), nleaves=5, pe
 }
 
 print.trioLR <- function(x, asDNF=FALSE, posBeta=FALSE, digits=3, ...){
-	if(asDNF)
-		require(mcbiopi, quietly=TRUE) || stop("Package mcbiopi is required.")
+	#if(asDNF)
+	#	requireNamespace("mcbiopi", quietly=TRUE)
 	cat("         Trio Logic Regression\n\n", sep="")
 	if(x$choice==7){
 		cat("Search Algorithm: MCMC\n\n", sep="")
@@ -86,7 +84,7 @@ printTrioTree <- function(ltree, cn, asDNF=FALSE, posBeta=FALSE, digits=3){
 				coef <- abs(coef)
 			else
 				ltree$coef <- abs(ltree$coef)
-			tmppi <- getPImps(ltree, 1)
+			tmppi <- mcbiopi::getPImps(ltree, 1)
 			tmpdnf <- paste("(", getSNPdummyNames(tmppi, cn), ")", sep="", collapse=" | ")
 			vec[1] <- if(length(tmppi)==1) tmpdnf else paste("(", tmpdnf, ")", sep="")
 		}

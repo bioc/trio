@@ -27,7 +27,7 @@ util.shuffleIdx <- function(segLen, segCt){
 
 
 trio.permTest <- function(object, conditional=FALSE, n.perm=10, nleaves=NULL, control=NULL, rand=NA){
-	require(mcbiopi, quietly=TRUE) || stop("Package mcbiopi is required.")
+	# require(mcbiopi, quietly=TRUE) || stop("Package mcbiopi is required.")
     	if(n.perm <= 0)
 		stop("n.perm must be at least 1.")
 	if(!is(object, "trioLR"))
@@ -60,7 +60,7 @@ trio.permTest <- function(object, conditional=FALSE, n.perm=10, nleaves=NULL, co
 	}
 	else{
 		logreg.score <- object$model$score
-  		logreg.pred <- evalTree(object$model$trees[[1]]$trees, bina)
+  		logreg.pred <- mcbiopi::evalTree(object$model$trees[[1]]$trees, bina)
   	}
   	scoreVec <- rep(NA, times=n.perm+1)
   	scoreVec[1] <- logreg.score

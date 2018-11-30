@@ -22,6 +22,23 @@ vcf2geno,
 colEMlrt
 )
 
+import(survival, LogicReg)
+
+importFrom("grDevices", "colors", "dev.off", "gray", "jpeg")
+importFrom("graphics", "abline", "axis", "barplot", "dotchart", "grid",
+           "image", "legend", "lines", "par", "plot", "points", "rect",
+           "segments", "text", "title")
+importFrom("methods", "is")
+importFrom("stats", "binomial", "coef", "dchisq", "glm", "na.exclude",
+           "optim", "pchisq", "pnorm", "predict", "qchisq", "qnorm",
+           "quasipoisson", "rbinom", "rmultinom", "runif", "uniroot")
+importFrom("survival", "clogit", "strata")
+importFrom("utils", "data", "packageVersion", "read.csv", "read.table",
+           "str", "write.csv", "write.table")
+importFrom("siggenes", "sam", "ebam", "nclass.wand", "denspr")
+
+
+
 S3method(plot, getLD)
 S3method(print, LDblocks)
 S3method(plot, LDblocks)

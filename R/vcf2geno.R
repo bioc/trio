@@ -3,8 +3,8 @@ vcf2geno <- function(vcf, ped, none="0/0", one=c("0/1"), both="1/1", na.string="
 	if(!is(vcf, "CollapsedVCF") & !is.matrix(vcf))
 		stop("vcf must be either a matrix or an object of class collapsedVCF")
 	if(is(vcf, "CollapsedVCF")){
-		require(VariantAnnotation) || stop("The package VariantAnnotation is required.")
-		vcf <- geno(vcf)$GT
+		# requireNamespace("VariantAnnotation") 
+		vcf <- VariantAnnotation::geno(vcf)$GT
 		if(is.null(vcf))
 			stop("vcf does not seem to contain the genotype data.")
 	}

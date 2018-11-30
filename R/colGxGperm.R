@@ -36,7 +36,7 @@ compPermTDT2way <- function(...)
 
 colGxGPerms <- function(mat.snp, n.perm=1000, genes=NULL, col.out=NULL,
 		warnError=TRUE, verbose=TRUE, rand=NA){
-	require(survival)
+	requireNamespace("survival", quietly=TRUE)
 	if(!is.null(col.out)){
 		if(!is(col.out, "colTDTepi"))
 			stop("col.out must be the output of colTDT2way with epistatic=TRUE.")

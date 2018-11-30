@@ -1,6 +1,6 @@
 colTDTsam <- function(mat.snp, model=c("additive", "dominant", "recessive", "max"),
 		approx=NULL, B=1000, size=10, chunk=100, rand=NA){
-	require(siggenes)
+	requireNamespace("siggenes")
 	if(!is.matrix(mat.snp))
 		stop("mat.snp must be a matrix.")
 	if(nrow(mat.snp) %%3 != 0)
@@ -340,7 +340,7 @@ gtdt.null.rec <- function(matA, perm, idsHet){
 colTDTebam <- function(mat.snp, model=c("additive", "dominant", "recessive", "max"), approx=NULL,
 		B=1000, size=10, chunk=100, n.interval=NULL, df.ratio=3, df.dens=3, 
 		knots.mode=TRUE, type.nclass=c("wand", "FD", "scott"), fast=FALSE, rand=NA){
-	require(siggenes)
+	requireNamespace("siggenes")
 	if(!is.matrix(mat.snp))
 		stop("mat.snp must be a matrix.")
 	if(nrow(mat.snp) %%3 != 0)
@@ -355,7 +355,7 @@ colTDTebam <- function(mat.snp, model=c("additive", "dominant", "recessive", "ma
 	if(is.null(approx))
 		approx <- type != "max"
 	if(!is.logical(approx))
-		stop("approx must be a logic variable.")
+		stop("approx must be a logic variable.")		
 	ebam(mat.snp, numeric(ncol(mat.snp)), method=gtdt.ebam, model=type, delta=0.9, gene.names=NULL, approx=approx,
 		B=B, size=size, chunk=chunk, n.interval=n.interval, df.ratio=df.ratio, df.dens=df.dens, 
 		knots.mode=knots.mode, type.nclass=type.nclass, fast=fast, rand=rand)
@@ -406,6 +406,7 @@ gtdt.ebam <- function(data, cl, model, approx=TRUE, B=1000, size=10, chunk=100, 
 
 gtdt.null.approx2 <- function(stat, pval, n.interval=NULL, df.dens=3, knots.mode=TRUE, type.nclass="wand",
 		msg=""){
+	requireNamespace("siggenes", quietly = TRUE)
 	ids.notna <- !is.na(stat)
 	statnotna <- stat[ids.notna]
 	z.dens <- vec.neg <- rep(NA, length(stat))
@@ -453,10 +454,10 @@ compFailTDT <- function(geno, z, interval, type, B=1000, size=10, chunk=100, fas
 }
 
 estimateRatioTDT <- function(center, succ, fail, stat, df.ratio=3){
-	require(splines)
+	# requireNamespace("splines")
 	n.obs <- succ + fail
 	ids <- n.obs > 0
-	tmpmat <- ns.out <- ns(center[ids], df.ratio)
+	tmpmat <- ns.out <- splines::ns(center[ids], df.ratio)
 	class(tmpmat) <- "matrix"
 	dat <- data.frame(s=succ[ids], f=fail[ids], tmpmat)
 	glm.out <- glm(cbind(s, f) ~ ., data=dat, family=binomial)

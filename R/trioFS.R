@@ -22,9 +22,8 @@ trioFS.default <- function(x, y, B=20, nleaves=5, replace=TRUE, sub.frac=0.632, 
 }
 
 trioFS.formula <- function(formula, data, recdom=TRUE, ...){
-	(require(logicFS, quietly=TRUE) && packageVersion("logicFS") >= "1.28.1") || 
-		stop("Package logicFS >= 1.28.1 is required.")
-	xy <- getXy(formula, data, recdom=recdom)
+	# requireNamespace("logicFS", quietly=TRUE)
+	xy <- logicFS::getXy(formula, data, recdom=recdom)
 	trioFS(xy$x, xy$y, ...)
 }
 
@@ -34,8 +33,7 @@ trioFS.trioPrepare <- function(x, ...){
 
 trioBagging <- function(x, y, B=20, nleaves=5, replace=TRUE, sub.frac=0.632, control=NULL, fast=FALSE, 
 		verbose=FALSE, rand=NA){
-	(require(LogicReg, quietly=TRUE) && packageVersion("LogicReg") >= "1.5.3") || 
-		stop("Package LogicReg >= 1.5.3 is required.")
+	# requireNamespace("LogicReg", quietly=TRUE) 
 	if(B < 1)
 		stop("B must be a positive integer.")
   	n.trios <- nrow(x)/4
@@ -100,7 +98,7 @@ trioBagging <- function(x, y, B=20, nleaves=5, replace=TRUE, sub.frac=0.632, con
 }
 
 vim.trioFS <- function(object, x, y, neighbor=FALSE, addInfo=FALSE, addMatImp=TRUE){
-	require(survival, quietly=TRUE) || stop("Package survival is required.")
+	# requireNamespace("survival", quietly=TRUE)
 	if(!is(object, "trioBagg"))
 		stop("object must be an object of class trioBagg.")
 	list.primes <- trioPImp(object)
@@ -141,11 +139,11 @@ vim.trioFS <- function(object, x, y, neighbor=FALSE, addInfo=FALSE, addMatImp=TR
 
 
 trioPImp <- function(log.out){
-	require(mcbiopi, quietly=TRUE) || stop("Package mcbiopi is required.")
+	# requireNamespace("mcbiopi", quietly=TRUE) 
 	lmodel <- log.out$logreg.model
 	list.primes <- vector("list", length(lmodel))
 	for(i in 1:length(lmodel))
-		list.primes[[i]] <- getPImps(lmodel[[i]]$trees[[1]], 0)
+		list.primes[[i]] <- mcbiopi::getPImps(lmodel[[i]]$trees[[1]], 0)
 	whichNull <- which(sapply(list.primes, is.null))
 	if(length(whichNull)>0){
 		list.primes <- list.primes[-whichNull]
@@ -193,7 +191,7 @@ vimTrio <- function(primes, mat.eval, inbagg, cl){
 	st <- rep(1:(length(inbagg) / 4), e=4)
 	for(i in 1:n.primes){
 		x <- mat.pred[,i]
-		coef <- clogit(cl[inbagg] ~ x[inbagg] + strata(st))$coefficients
+		coef <- survival::clogit(cl[inbagg] ~ x[inbagg] + strata(st))$coefficients
 		vec.ll[i] <- predLL(coef, x[oob])
 	}
 	x <- (rowSums(mat.eval[,id.primes]) > 0) * 1
@@ -207,7 +205,7 @@ vimTrio.oneprime <- function(oneprime, cl, oob, inbagg){
 	n.oobfam <- length(oob) / 4
 	ll.null <- log(0.25) * n.oobfam
 	st <- rep(1:(length(inbagg) / 4), e=4)
-	coef <- clogit(cl[inbagg] ~ oneprime[inbagg] + strata(st))$coefficients
+	coef <- survival::clogit(cl[inbagg] ~ oneprime[inbagg] + strata(st))$coefficients
 	ll.prime <- predLL(coef, oneprime[oob])
 	-2 * (ll.null - ll.prime)
 }

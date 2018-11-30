@@ -1,6 +1,6 @@
 trio.prepare <-
 function(trio.dat, freq=NULL, blocks=NULL, logic=TRUE, ...){
-   require(haplo.stats) || stop("Package haplo.stats is required.")
+   # requireNamespace("haplo.stats")
    ifD = FALSE
 
    alleleCode = 1:2
