@@ -1,13 +1,13 @@
 Package: trio
 Type: Package
 Title: Testing of SNPs and SNP Interactions in Case-Parent Trio Studies
-Version: 3.25.0
-Date: 2018-11-30
+Version: 3.25.1
+Date: 2019-11-15
 Author: Holger Schwender, Qing Li, Philipp Berger, Christoph Neumann, Margaret Taub, Ingo Ruczinski
 Maintainer: Holger Schwender <holger.schw@gmx.de>
 Depends: R (>= 3.0.1)
 Suggests: haplo.stats, mcbiopi, splines, logicFS (>= 1.28.1), KernSmooth, VariantAnnotation
-Imports: grDevices, graphics, methods, stats, survival, utils, siggenes, LogicReg (>= 1.5.3)
+Imports: grDevices, graphics, methods, stats, survival, utils, siggenes, LogicReg (>= 1.6.1)
 Description: Testing SNPs and SNP interactions with a genotypic TDT. This package
    furthermore contains functions for computing pairwise values of LD measures and 
    for identifying LD blocks, as well as functions for setting up matched 

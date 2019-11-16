@@ -76,17 +76,12 @@ triologreg <- function(bin, resp, weights, choice, nleaves=5, penalty=0, control
     	}
 	xtree <-  rep(n100, n.a)
 	ip4 <- 2 * ipars[4] + 1
-	fit <- .Fortran("slogreg", as.integer(n1), as.integer(n2), 
-		as.integer(nsep), ip = as.integer(ipars), as.single(rpars), 
-		as.single(t(sep)), as.integer(cens), as.integer(orders), 
-		as.single(resp), as.single(wgt), as.integer(t(bin)), 
-		trees = as.integer(xtree), coef = as.single(rep(n100, n.b)), 
-		scores = as.single(rep(n100, n.c)), as.integer(ipars[6]), 
-		as.integer(ip4), as.integer(rep(0, 2 * ipars[6] * ip4 * n1)), 
-		as.integer(rep(0, 7 * ipars[6] * (ip4 + 1) * n2 * 4)), 
-		as.single(rep(0, 7 * ipars[6] * (ip4 + 1) * n2 * 4)), 
-		as.integer(t(bin)),rd4 = as.integer(rep(0,nxx)),
-		PACKAGE = "LogicReg")
+	fit <- .C("clogreg", as.integer(n1), as.integer(n2), as.integer(nsep), 
+        	ip = as.integer(ipars), as.single(rpars), as.single(t(sep)), 
+        	as.integer(cens), as.integer(orders), as.single(resp), 
+        	as.single(wgt), as.integer(t(bin)), trees = as.integer(xtree), 
+        	coef = as.single(rep(n100, n.b)), scores = as.single(rep(n100, n.c)), 
+		rd4 = as.integer(rep(0, nxx)), PACKAGE = "LogicReg")
 	type <- "Trio Logic Regression"
 	if(choice %in% (1:2) && is.na(fit$coef[2])){
 		if(notBuiltStop)
