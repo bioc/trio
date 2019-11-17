@@ -1,8 +1,8 @@
 Package: trio
 Type: Package
 Title: Testing of SNPs and SNP Interactions in Case-Parent Trio Studies
-Version: 3.24.1
-Date: 2019-11-16
+Version: 3.24.2
+Date: 2019-11-17
 Author: Holger Schwender, Qing Li, Philipp Berger, Christoph Neumann, Margaret Taub, Ingo Ruczinski
 Maintainer: Holger Schwender <holger.schw@gmx.de>
 Depends: R (>= 3.0.1)
