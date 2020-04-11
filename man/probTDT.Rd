@@ -25,7 +25,6 @@ probTDT(mat.geno, model = c("additive", "dominant", "recessive"),
 }
   \item{size}{the number of SNPs considered simultaneously when computing the parameter estimates. Ignored if \code{fast = FALSE}.
 }
-  \item{...}{ignored.}
 }
 \value{
 An object of class \code{colTDT} consisting of the following numeric values or vectors, respectively:
@@ -37,8 +36,7 @@ An object of class \code{colTDT} consisting of the following numeric values or v
 \item{lowerRR}{the lower bound of the 95\% confidence interval for \code{RR},}
 \item{upperRR}{the upper bound of the 95\% confidence interval for \code{RR},}
 \item{usedTrios}{the number of trios affecting the parameter estimation,}
-\item{pMendelErr}{the sum across families of probabilities of Mendelian errors,}
-\item{...}{further internal parameters}
+\item{pMendelErr}{the sum across families of probabilities of Mendelian errors.}
 }
 
 \references{
