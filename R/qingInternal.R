@@ -1,3 +1,5 @@
+qingEnv <- new.env()
+
 augBkFrame <-
 function(hapBkMap, key, probLeftover = .01){
 	keyIndex = which(hapBkMap$keys==key)
@@ -3724,8 +3726,8 @@ function(appVarNames,  trioBlock, snpLen=ncol(trioBlock),  bkIdx, job=1, snpCodi
   if( min( c(snpCoding==c(0,1,2,3),  snpBase ==c(0,1,2))) <1 )  
      stop (paste("\nData configuration is not right:\n", "snpCoding=[", paste(snpCoding, collapse=";", sep=""),
                                                        "] snpBase=[", paste(snpBase, collapse=";", sep=""), "]", sep=""))
-  allhapKeys = get(appVarNames$freqMap)$hapIndex
-  semiMapFrame = get(appVarNames$freqMap)$hapBkOnlyMap$bks[[ match(bkIdx, allhapKeys)]]
+  allhapKeys = get(appVarNames$freqMap, envir = qingEnv)$hapIndex
+  semiMapFrame = get(appVarNames$freqMap, envir = qingEnv)$hapBkOnlyMap$bks[[ match(bkIdx, allhapKeys)]]
 
   ## the third row is the child
   child = trioBlock[3,]
@@ -4396,7 +4398,7 @@ function(appVarNames, filteredBkInfo, idxList, snpCoding, reqIn=NULL, reqDigits 
 	tryCatch({
 				
 				tmpGetObj = NULL
-				tmpGetObj = get(appVarNames$digit, envir=baseenv() )
+				tmpGetObj = get(appVarNames$digit, envir=qingEnv)
 				
 				idx4hapDigit$digitMap1 = tmpGetObj$digitMap1[1:(2^(snpLen-1)), 1:snpLen]
 				idx4hapDigit$digitMap2 = tmpGetObj$digitMap2[1:(2^(snpLen-1)), 1:snpLen]
@@ -5087,7 +5089,7 @@ function(appVarNames, child, par1, par2, prob1, prob2, logF = NULL, job=1){
   if(ifD) print(par1)
   if(ifD) print(par2)
   tryCatch({
-    maxTbl = get(appVarNames$tbl, envir=baseenv())
+    maxTbl = get(appVarNames$tbl, envir=qingEnv)
     maxRow = nrow(maxTbl)
   }, error=function(e){
     errTrace = paste(e, collapse=";", sep="")
@@ -5095,7 +5097,7 @@ function(appVarNames, child, par1, par2, prob1, prob2, logF = NULL, job=1){
   })
   
   tryCatch({
-    maxMateTbl = get(appVarNames$mateTbl, envir=baseenv())
+    maxMateTbl = get(appVarNames$mateTbl, envir=qingEnv)
   }, error=function(e){
     errTrace = paste(e, collapse=";", sep="")
     stop(paste("\n", fStr, errTrace, "\nApp-wise Global Variable ", appVarNames$freqMap, " does not exisit."))
@@ -5936,7 +5938,7 @@ function(bkMap=NULL, preObj=NULL, spStrata, rule, caseNo, ifS="simuInfo",  reCon
   }
 
   #print(FN)
-  spStrataObj  = get(spStrata)
+  spStrataObj  = get(spStrata, envir = qingEnv)
   #print(str(spStrataObj))
 
   
@@ -6085,7 +6087,7 @@ function(caseNo, matingTbName, ifS="simuDirectInfo", reControl =FALSE ){
 
      FN = "HRCB.famMap.spTrio" 
      #print(FN)
-     matingTbInfo  = get(matingTbName)
+     matingTbInfo  = get(matingTbName, envir = qingEnv)
      #print(str(matingTbInfo))
 
      
@@ -6408,7 +6410,7 @@ function(raw, idx, job=1, toolname=NULL, freqMaps=NULL, dir="", is.1digit=TRUE, 
 
   ## find the start and end position for the blocks of interest
 
-  all.genomeMarkerInfo = get(toolname$freqMap)$genomeMarkerInfo
+  all.genomeMarkerInfo = get(toolname$freqMap, envir = qingEnv)$genomeMarkerInfo
 
   bd.start = all.genomeMarkerInfo[idx[1], 2, drop=TRUE]
   bd.end   = all.genomeMarkerInfo[idx[ length(idx) ], 3, drop=TRUE]
@@ -6449,15 +6451,15 @@ function(raw, idx, job=1, toolname=NULL, freqMaps=NULL, dir="", is.1digit=TRUE, 
   imputBkRecord.ct = 0
   errorTrap = NULL
   
-  tryCatchEnv = new.env(parent=baseenv())
+  tryCatchEnv = new.env(parent=qingEnv)
   assign("trapID", 0, envir=tryCatchEnv)
   assign("errorTrap", errorTrap, envir=tryCatchEnv)
 
-  if(!is.null(get(toolname$freqMap)$hapBkOnlyMap)){
-	  all.hapIndex = get(toolname$freqMap)$hapIndex
+  if(!is.null(get(toolname$freqMap, envir = qingEnv)$hapBkOnlyMap)){
+	  all.hapIndex = get(toolname$freqMap, envir = qingEnv)$hapIndex
 	  
 	  hapBkOnlyMap.vars=list()
-	  tmp.hapMap =  get(toolname$freqMap)$hapBkOnlyMap
+	  tmp.hapMap =  get(toolname$freqMap, envir = qingEnv)$hapBkOnlyMap
 	  hapBkOnlyMap.vars$resiProbCol= tmp.hapMap$resiProbCol
 	  hapBkOnlyMap.vars$augIdxCol= tmp.hapMap$augIdxCol
 	  hapBkOnlyMap.vars$probCol= tmp.hapMap$probCol
@@ -6479,7 +6481,7 @@ function(raw, idx, job=1, toolname=NULL, freqMaps=NULL, dir="", is.1digit=TRUE, 
 
         snpCt = bk.bd[2]-bk.bd[1]+1
 
-        exhaustHap = get(toolname$exp)
+        exhaustHap = get(toolname$exp, envir = qingEnv)
         exhaustHap = exhaustHap[1:2^snpCt, 1:snpCt]
 
         bk.genoRowComp = rowSums(bk.geno!=0) == snpCt 
@@ -6599,7 +6601,7 @@ function(raw, idx, job=1, toolname=NULL, freqMaps=NULL, dir="", is.1digit=TRUE, 
       }else{
         # print("A genotype")  ## genotype
         bk.bd = unlist(all.genomeMarkerInfo[unit, 2])
-        tmp.Map =  get(toolname$freqMap)$genoOnlyMap
+        tmp.Map =  get(toolname$freqMap, envir = qingEnv)$genoOnlyMap
         popuProb =  tmp.Map$bks[[bk.bd]][,tmp.Map$probCol]
 
         snpCt = 1
@@ -6762,7 +6764,7 @@ function(raw=data, idx, job=1, toolname=NULL, freqMaps=NULL, dir=NULL, is.1digit
   
   ## find the start and end position for the blocks of interest
 
-  all.genomeMarkerInfo = get(toolname$freqMap)$genomeMarkerInfo
+  all.genomeMarkerInfo = get(toolname$freqMap, envir = qingEnv)$genomeMarkerInfo
 
   bd.start = all.genomeMarkerInfo[idx[1], 2, drop=TRUE]
   bd.end   = all.genomeMarkerInfo[idx[ length(idx) ], 3, drop=TRUE]
@@ -6805,18 +6807,18 @@ function(raw=data, idx, job=1, toolname=NULL, freqMaps=NULL, dir=NULL, is.1digit
   imputBkRecord.ct = 0
   errorTrap = NULL
   
-  tryCatchEnv = new.env(parent=baseenv())
+  tryCatchEnv = new.env(parent=qingEnv)
   assign("trapID", 0, envir=tryCatchEnv)
   assign("errorTrap", errorTrap, envir=tryCatchEnv)
   
   #print("Get imputBkRecord.ct")
   #print(dim(imputBkRecord))
   
-	if(!is.null(get(toolname$freqMap)$hapBkOnlyMap)){
-		all.hapIndex = get(toolname$freqMap)$hapIndex
+	if(!is.null(get(toolname$freqMap, envir = qingEnv)$hapBkOnlyMap)){
+		all.hapIndex = get(toolname$freqMap, envir = qingEnv)$hapIndex
 		
 		hapBkOnlyMap.vars=list()
-		tmp.hapMap =  get(toolname$freqMap)$hapBkOnlyMap
+		tmp.hapMap =  get(toolname$freqMap, envir = qingEnv)$hapBkOnlyMap
 		hapBkOnlyMap.vars$resiProbCol= tmp.hapMap$resiProbCol
 		hapBkOnlyMap.vars$augIdxCol= tmp.hapMap$augIdxCol
 		hapBkOnlyMap.vars$probCol= tmp.hapMap$probCol
@@ -6842,7 +6844,7 @@ function(raw=data, idx, job=1, toolname=NULL, freqMaps=NULL, dir=NULL, is.1digit
 
         snpCt = bk.bd[2]-bk.bd[1]+1
 
-        exhaustHap = get(toolname$exp)
+        exhaustHap = get(toolname$exp, envir = qingEnv)
         exhaustHap = exhaustHap[1:(2^snpCt), 1:snpCt]
 
         bk.missTrioIdx = (1:trioCt)
@@ -6962,7 +6964,7 @@ function(raw=data, idx, job=1, toolname=NULL, freqMaps=NULL, dir=NULL, is.1digit
 
         bk.bd = unlist(all.genomeMarkerInfo[unit, 2])
 
-        tmp.Map =  get(toolname$freqMap)$genoOnlyMap
+        tmp.Map =  get(toolname$freqMap, envir = qingEnv)$genoOnlyMap
         popuProb =  tmp.Map$bks[[bk.bd]][,tmp.Map$probCol]
 
         snpCt = 1
@@ -7310,7 +7312,7 @@ function(data, snpIdxRange=NULL, key.prefix="", bk.sizes=NULL, action = c("outpu
 		MedErr = matrix(NA, ncol=4, nrow=ncol(snpTrio))
 		colnames(MedErr)=c("y", "x", "trio", "SNP")
 		
-		tryCatchEnv = new.env(parent=baseenv())
+		tryCatchEnv = new.env(parent=qingEnv)
 		assign("MedErr.ct", 0, envir=tryCatchEnv)	
 		assign("MedErr", MedErr, envir=tryCatchEnv)
 		
@@ -7457,9 +7459,9 @@ function(path=NULL, objname,  exam.ext = .3){
  
   
   if( (!is.null(path)) & (!is.character(objname))){
-    assign(objname, NULL)
-    load(path)
-    myobj = get(objname)
+    assign(objname, NULL, envir = qingEnv)
+    load(path, envir = qingEnv)
+    myobj = get(objname, envir = qingEnv)
   }else{
     myobj = objname
   }
@@ -7619,7 +7621,7 @@ function(appVarNames, homoHetoInfo, snpLen){
 	tryCatch({
 				
 				tmpGetObj = NULL
-				tmpGetObj = get(appVarNames$digit, envir=baseenv())
+				tmpGetObj = get(appVarNames$digit, envir=qingEnv)
 				idx4hapDigit$digitMap1 = tmpGetObj$digitMap1[1:(2^(snpLen-1)), 1:snpLen]
 				idx4hapDigit$digitMap2 = tmpGetObj$digitMap2[1:(2^(snpLen-1)), 1:snpLen]
 				
@@ -8558,7 +8560,7 @@ function(freqMaps){
     #print(paste("Application wise global environment var with names as", paste(appVarNames, sep="", collapse=";")))
     
     lapply(1:length(appVarNames), FUN=function(item, varNames, varList){
-              assign(varNames[[item]], varList[[item]], envir=baseenv()); return(NULL)},
+              assign(varNames[[item]], varList[[item]], envir=qingEnv); return(NULL)},
            varNames=appVarNames,
            varList = list(semiAugHapBkGenoMap, idx4hapDigitAll, exhaustHapExpAll, maxTbl, maxMateTbl))
     return(appVarNames)
@@ -8608,8 +8610,8 @@ function(triodd, freq,  impu.missingOnly=TRUE){
 
   toolboxNames = toolbox.load(freqMaps=freq)
   
-  if(!is.null(  get(toolboxNames$freqMap)$hapBkOnlyMap )){
-	  bk.ssize =  get(toolboxNames$freqMap)$hapBkOnlyMap$bkSnpLens
+  if(!is.null(  get(toolboxNames$freqMap, envir = qingEnv)$hapBkOnlyMap )){
+	  bk.ssize =  get(toolboxNames$freqMap, envir = qingEnv)$hapBkOnlyMap$bkSnpLens
 	  if (max(bk.ssize>=8)==1) stop("At least one haplotype block has 8 or more SNPs in the block. Method fails.")	  
   }
 
@@ -8633,7 +8635,7 @@ function(triodd, freq,  impu.missingOnly=TRUE){
   ##TODO!!! confirm the number
   #print(toolboxNames)
   
-  bkCt = nrow(get(toolboxNames$freqMap)$genomeMarkerInfo)
+  bkCt = nrow(get(toolboxNames$freqMap, envir = qingEnv)$genomeMarkerInfo)
 
   if(impu.missingOnly){
 
@@ -8677,8 +8679,8 @@ function(trio1digit, freqMaps, bk.seq=NULL, dig1Code=0:3, subInF = "PPC", dir=NU
   
   toolboxNames = toolbox.load(freqMaps=freqMaps)
   
-  if(!is.null(  get(toolboxNames$freqMap)$hapBkOnlyMap )){
-	  bk.ssize =  get(toolboxNames$freqMap)$hapBkOnlyMap$bkSnpLens
+  if(!is.null(  get(toolboxNames$freqMap, envir = qingEnv)$hapBkOnlyMap )){
+	  bk.ssize =  get(toolboxNames$freqMap, envir = qingEnv)$hapBkOnlyMap$bkSnpLens
 	  if (max(bk.ssize>=8)==1) stop("At least one haplotype block has 8 or more SNPs in the block. Method fails.")	  
   }  
   
@@ -8695,7 +8697,7 @@ function(trio1digit, freqMaps, bk.seq=NULL, dig1Code=0:3, subInF = "PPC", dir=NU
   ##TODO!!! confirm the number
   #print(toolboxNames)
   
-  bkCt = nrow(get(toolboxNames$freqMap)$genomeMarkerInfo)
+  bkCt = nrow(get(toolboxNames$freqMap, envir = qingEnv)$genomeMarkerInfo)
 
   #print(data[1:3, 1:10])
   if(is.null(bk.seq)) bk.seq = 1:bkCt
@@ -8777,7 +8779,7 @@ function (bkMap, rule, caseNo, datasetCt=1, infoS="simuDirInfo", ddir=NULL, base
       matingTbInfo = bkMap.HRCB.famMap(info$bkMapS, rule, newColName=info$newColName,  ifS=infoS, baseName=baseObj.name)
 
       #finalUse =  baseObj.name
-      assign(finalUse, matingTbInfo, envir=baseenv())
+      assign(finalUse, matingTbInfo, envir=qingEnv)
       
     }else{
       ## or not save it, just used. Not recommend.
@@ -8785,7 +8787,7 @@ function (bkMap, rule, caseNo, datasetCt=1, infoS="simuDirInfo", ddir=NULL, base
       matingTbInfo = bkMap.HRCB.famMap(info$bkMapS, rule, newColName=info$newColName,  ifS=infoS, baseName=NULL)
 
       #finalUse = matingTblInfo
-      assign(finalUse, matingTbInfo, envir=baseenv())
+      assign(finalUse, matingTbInfo, envir=qingEnv)
     }
     
   }else{
@@ -8794,11 +8796,11 @@ function (bkMap, rule, caseNo, datasetCt=1, infoS="simuDirInfo", ddir=NULL, base
     if( is.character(baseObj.saveFN)){
       print(qp("Stepstone object is saved before as:", baseObj.saveFN, ". Do not need to generate it."))
       tmp = load(paste(baseObj.saveFN, ".RData", sep=""))
-      assign(finalUse, get(tmp[1]), envir=baseenv())
+      assign(finalUse, get(tmp[1]), envir=qingEnv)
       
     }else{
       print(qp("Stepstone object is given."))
-      assign(finalUse, baseObj.saveFN, envir=baseenv())
+      assign(finalUse, baseObj.saveFN, envir=qingEnv)
     }
   }
 
@@ -8872,14 +8874,14 @@ function(bkMap, rule, caseNo, datasetCt=1, infoS="simuPropInfo", exInfoS="exSimu
       if(ifD) print(qp("No stepstone object is previously saved. Generate and save the object as:", spStrata.name, ".RData"))
 
       #finalUse = spStrata.name
-      assign(finalUse, spStrata, envir=baseenv())
+      assign(finalUse, spStrata, envir=qingEnv)
       
     }else{
       ## or not save it, just used. Not recommend.
       spStrata = bkMap.HRCB.Esp1Rule.Base(bkMap, rule, baseName=NULL)
 
       #finalUse = spStrata
-      assign(finalUse, spStrata, envir=baseenv())
+      assign(finalUse, spStrata, envir=qingEnv)
       #print(qp("No stepstone object is previously saved. Generate but not save the object."))
     }
     
@@ -8890,7 +8892,7 @@ function(bkMap, rule, caseNo, datasetCt=1, infoS="simuPropInfo", exInfoS="exSimu
       if(ifD) print(qp("Stepstone object is previously saved as:", spStrata.saveFN, ".RData. Do not need to generate it."))
 
       tryCatch({tmp = load(paste(spStrata.saveFN, ".RData", sep=""))
-               assign(finalUse, get(tmp[1]), envir=baseenv())  },
+               assign(finalUse, get(tmp[1]), envir=qingEnv)  },
              error = function(e){
                stop(paste("Cannot open step-stone file '", spStrata.saveFN, ".RData'.", sep=""))
              })
@@ -8898,7 +8900,7 @@ function(bkMap, rule, caseNo, datasetCt=1, infoS="simuPropInfo", exInfoS="exSimu
     }else{
       #print(qp("Stepstone object is given."))
       #finalUse = spStrata.saveFN
-      assign(finalUse, spStrata.saveFN, envir=baseenv())
+      assign(finalUse, spStrata.saveFN, envir=qingEnv)
     }
   }
   
@@ -9251,7 +9253,7 @@ function(data, key.prefix="", bk.sizes=NULL, dig2Code=0:2, dig1Code=c(0,1,3,2),
 		
 		MedErr = matrix(NA, ncol=4, nrow=ncol(snpTrio))
 		colnames(MedErr)=c("y", "x", "trio", "SNP")
-		tryCatchEnv = new.env(parent=baseenv())
+		tryCatchEnv = new.env(parent=qingEnv)
 		assign("MedErr.ct", 0, envir=tryCatchEnv)	
 		assign("MedErr", MedErr, envir=tryCatchEnv)
 
@@ -9790,7 +9792,7 @@ function(nameList, varList, na.allow = TRUE, na.replace = NULL){
 
   namePos = rep(0, length=exLen)
   
-  tryCatchEnv = new.env(parent=baseenv())
+  tryCatchEnv = new.env(parent=qingEnv)
   assign("namePos", namePos, envir=tryCatchEnv)
   
   ## based on this map, find the right sequence of positions to extract values
