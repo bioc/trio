@@ -1,5 +1,6 @@
 \name{trio.prepare}
 \alias{trio.prepare}
+\alias{qingEnv}
 
 \title{Generate Trio Data Format Suitable for Trio Logic Regression}
 
