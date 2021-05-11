@@ -1,0 +1,73 @@
+export(
+trio.sim, trio.prepare, trio.check, 
+getLD, findLDblocks, splitBlocks,
+tdt, colTDT, tdt2way, colTDT2way, colTDTinter2way, compPermTDT2way,
+ped2geno, read.pedfile, removeSNPs, removeTrios, orderSNPs, colMAFtrio,
+colTDTmaxStat, colTDTmaxTest,
+colGxE, colGxEPerms,
+trio.permTest,
+colTDTsam, colTDTebam, gtdt.stat, gtdt.ebam,
+fastGxG, fastGxGrec,
+poly4root, poly4rootMat,
+scoreTDT, scoreGxE, scoreMaxStat, scoreGxG,
+trioLR, trioFS, lrControl,
+getMatPseudo, getGxEstats,
+colGxG, tdtGxG, colGxGPerms,
+allelicTDT,
+getLDlarge,
+trio.power,
+probTDT,
+colPOlrt, colTAT,
+vcf2geno,
+colEMlrt,
+qingEnv
+)
+
+import(survival, LogicReg)
+
+importFrom("grDevices", "colors", "dev.off", "gray", "jpeg")
+importFrom("graphics", "abline", "axis", "barplot", "dotchart", "grid",
+           "image", "legend", "lines", "par", "plot", "points", "rect",
+           "segments", "text", "title")
+importFrom("methods", "is")
+importFrom("stats", "binomial", "coef", "dchisq", "glm", "na.exclude",
+           "optim", "pchisq", "pnorm", "predict", "qchisq", "qnorm",
+           "quasipoisson", "rbinom", "rmultinom", "runif", "uniroot")
+importFrom("survival", "clogit", "strata")
+importFrom("utils", "data", "packageVersion", "read.csv", "read.table",
+           "str", "write.csv", "write.table")
+importFrom("siggenes", "sam", "ebam", "nclass.wand", "denspr")
+
+
+
+S3method(plot, getLD)
+S3method(print, LDblocks)
+S3method(plot, LDblocks)
+S3method(print, tdt)
+S3method(print, colTDT)
+S3method(print, tdtEpi)
+S3method(print, colTDTepi)
+S3method(print, maxTestTrio)
+S3method(print, maxStatTrio)
+S3method(print, colGxE)
+S3method(print, scoreTDT)
+S3method(print, scoreGxE)
+S3method(print, maxScoreTrio)
+S3method(print, trioLR)
+S3method(plot, trioLR)
+S3method(print, trioFS)
+S3method(plot, trioFS)
+S3method(print, aTDT)
+S3method(plot, getLDlarge)
+S3method(print, trio.power)
+S3method(print, polrt)
+S3method(print, tat)
+S3method(print, colEMlrt)
+S3method(trioLR, default)
+S3method(trioLR, trioPrepare)
+S3method(trioLR, formula)
+S3method(trioFS, default)
+S3method(trioFS, trioPrepare)
+S3method(trioFS, formula)
+S3method(print, colGxEunstruct)
+
