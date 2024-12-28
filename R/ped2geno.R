@@ -1,16 +1,16 @@
-ped2geno <- function(ped, snpnames=NULL, coded=c("12", "AB", "ATCG", "1234"), 
-		naVal=0, cols4ID=FALSE){
+ped2geno <- function(ped, snpnames = NULL, coded = c("12", "AB", "ATCG", "1234"), 
+		naVal = 0, cols4ID = FALSE){
 	cn <- colnames(ped)
 	if(any(tolower(cn[1:6]) != c("famid", "pid", "fatid", "motid", "sex","affected")))
 		stop("The names of the first six columns must be\n",
 			"famid, pid, fatid, motid, sex, affected.")
-	if(any(duplicated(ped[,2])))
+	if(any(duplicated(ped$pid)))
 		stop("The IDs of the individuals in the second column of ped must be unique.")
-	if(any(ped[,3]==0 & ped[,4]!=0) | any(ped[,3]!=0 & ped[,4]==0))
+	if(any(ped$fatid == 0 & ped$motid != 0) | any(ped$fatid != 0 & ped$motid == 0))
 		stop("In some of the rows, fatid is equal to zero and matid differs from zero,\n",
 			"or vice versa.")
 	mat.snp <- as.matrix(ped[,-(1:6)])
-	rownames(ped) <- ped[,2]
+	rownames(ped) <- ped$pid
 	if(ncol(mat.snp) %% 2 == 1)
 		stop("ped must contain six columns for the information on the trios\n",
 			"and two columns for each SNP.")
@@ -74,17 +74,21 @@ ped2geno <- function(ped, snpnames=NULL, coded=c("12", "AB", "ATCG", "1234"),
 				mat.recoded[,ids.major==i][mat.snp[,ids.major==i] == allele[i]] <- 1
 		}
 	}	
-	rownames(mat.recoded) <- ped[,2]			  
+	rownames(mat.recoded) <- ped$pid			  
 	
-	mat.kid <- ped[ped[,3]!=0 & ped[,4]!=0, 2:4]
-	mat.ids <- as.matrix(mat.kid[,c(2,3,1)])
+	mat.kid <- ped[ped$fatid != 0 & ped$motid != 0, c(3, 4, 2)]
+	mat.ids <- as.matrix(mat.kid)
 	vec.ids <- as.vector(t(mat.ids))
-	if(any(!vec.ids %in% ped[,2]))
+	if(any(!vec.ids %in% ped$pid))
 		stop("Data for some of the moms or dads seem to be missing.")
 	mat.trio <- mat.recoded[vec.ids, seq(1, 2*n.snp, 2)] + 
 		mat.recoded[vec.ids, seq(2, 2*n.snp, 2)]
 	if(cols4ID){
-		mat.trio <- data.frame(ped[vec.ids,1:2], mat.trio, stringsAsFactors=FALSE)
+		if(is.data.table(ped)){
+			ped <- as.data.frame(ped)
+			rownames(ped) <- ped$pid
+		}
+		mat.trio <- data.frame(ped[vec.ids, 1:2], mat.trio, stringsAsFactors = FALSE)
 		colnames(mat.trio)[-(1:2)] <- if(!is.null(snpnames)) snpnames
 			else paste("SNP", 1:n.snp, sep="")
 	}

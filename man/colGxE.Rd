@@ -19,9 +19,11 @@ using \code{alpha = 1} and \code{unstructured = FALSE}.
 }
 
 \usage{
-colGxE(mat.snp, env, model = c("additive", "dominant", "recessive"), 
-   alpha1 = 1, size = 50, addGandE = TRUE, whichLRT = c("both", "2df", "1df", "none"),
-   add2df = TRUE, addCov = FALSE, famid = NULL, unstructured = FALSE)
+colGxE(mat.snp, env = NULL, listNumber = NULL,
+   model = c("additive", "dominant", "recessive"), alpha1 = 1, size = 50, 
+   addGandE = TRUE, whichLRT = c("both", "2df", "1df", "none"),
+   add2df = TRUE, addCov = FALSE, famid = NULL, unstructured = FALSE,
+   step1Stats = c("alpha", "add", "only"))
    
 colGxEPerms(mat.snp, env, model = c("additive", "dominant", "recessive"),
    B = 10000, size = 20, addPerms = TRUE, famid = NULL, rand = NA)
@@ -35,7 +37,9 @@ colGxEPerms(mat.snp, env, model = c("additive", "dominant", "recessive"),
     This matrix might be generated from a ped-file by, e.g., employing \code{\link{ped2geno}}.
 }
   \item{env}{a vector of length \eqn{t} (see \code{mat.snp}) containing for each offspring the value of a binary environmental
-    variable, which must take the values 0 and 1.
+    variable, which must take the values 0 and 1. Ignored if \code{listNumber} is specified.
+}
+  \item{listNumber}{a list consisting of two numeric matrices that contain, on the one hand, for trios affected by a (binary) environmental variable, and on the other hand, for trios not being affected by this environmental variable, the numbers of trios showing the different combinations of genotypes of the offsprings and their parents, i.e. the output of \code{\link{colNtrios}} with specified argument \code{env}. Each column of the matrices in \code{listNumber} corresponds to a genotype combination, and each row to a SNP.
 }
   \item{model}{type of model that should be fitted. Abbreviations are allowed. Thus, e.g., \code{model = "dom"} will
     fit a dominant model, and \code{model = "r"} an recessive model. 
@@ -69,6 +73,8 @@ colGxEPerms(mat.snp, env, model = c("additive", "dominant", "recessive"),
 	  gTDT model containing one indicator variable for the heterozygous genotype and one for the homozygous variant genotype with a gTDT model
 		additionally containing two terms for the interactions between these variables and the environmental factor. In this case, only
 		the arguments \code{mat.snp}, \code{env}, and \code{famid} are considered.}
+  \item{step1Stats}{character string specifying when the statistics of the first step in the two-step procedure of Gauderman et al. (2010) are returned.  If set to \code{"alpha"} (default), a matrix called \code{statsStep1} containing the parameter estimates, their standard errors, the values of the test statistic, and the corresponding p-values of this first step procedure is only added to the output, if \code{alpha1 < 1}. If set to \code{"add"}, \code{statsStep1} is always added to the output. This can be used if no preselection based on the first step of the Gauderman procedure should be done, i.e. if \code{alpha1 = 1}. If set to \code{"only"}, only the first step statistics of the Gauderman procedure will be computed (and no further test are performed). In this case, only \code{statsStep1} is returned. If set to \code{"add"} or \code{"only"}, the specification of \code{alpha1} is ignored.
+}
   \item{B}{number of permutations.}
   \item{addPerms}{should the matrices containing the permuted values of the test statistics for the SNP and the gene-environment
     interaction be added to the output?}
@@ -79,7 +85,9 @@ A conditional logistic regression model including two parameters, one for \eqn{G
 \eqn{G} is specified according to \code{model}.
 }
 \value{
-For \code{colGxE} with \code{unstructured=FALSE}, an object of class \code{colGxE} consisting of the following numeric matrices with two columns (one for each parameter):
+If \code{step1Stats} is set to \code{"only"}, only a matrix containing the parameter estimates, their standard errors, the values of the test statistic, and the corresponding p-values of the first step of the two-step procedure of Gauderman et al. (2010) is returned.
+
+Otherwise, if \code{unstructured = FALSE}, \code{colGxE} returns an object of class \code{colGxE} consisting of the following numeric matrices with two columns (one for each parameter):
 
 \item{coef}{the estimated parameter,}
 \item{se}{the estimated standard deviation of the parameter estimate,}
@@ -141,7 +149,7 @@ Holger Schwender, \email{holger.schwender@udo.edu}
 }
 
 \seealso{
-\code{\link{colTDT}}, \code{\link{ped2geno}}
+\code{\link{colTDT}}, \code{\link{ped2geno}}, \code{\link{colNtrios}}
 }
 
 \examples{

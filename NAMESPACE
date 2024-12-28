@@ -20,10 +20,11 @@ probTDT,
 colPOlrt, colTAT,
 vcf2geno,
 colEMlrt,
-qingEnv
+qingEnv,
+colNtrios, ntrios2Dom, ntrios2Rec
 )
 
-import(survival, LogicReg)
+import(survival, LogicReg, data.table)
 
 importFrom("grDevices", "colors", "dev.off", "gray", "jpeg")
 importFrom("graphics", "abline", "axis", "barplot", "dotchart", "grid",

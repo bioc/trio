@@ -1,3 +1,6 @@
+# Removed colTDT. Updated version in colTDTnew.R.
+
+
 tdt <- function(snp, model=c("additive", "dominant", "recessive")){
 	requireNamespace("survival")
 	n <- length(snp)
@@ -167,22 +170,6 @@ tdtGxG <- function(snp1, snp2, test=c("epistatic", "lrt", "full", "screen"), mod
 
 }
 
-	
-
-colTDT <- function(mat.snp, model=c("additive", "dominant", "recessive"), size=50){
-	if(!is.matrix(mat.snp))
-		stop("mat.snp has to be a matrix.")
-	if(nrow(mat.snp) %% 3 != 0)
-		stop("mat.snp does not seem to contain trio data, as its number of rows is\n",
-			"not dividable by 3.")
-	if(is.null(rownames(mat.snp)))
-		stop("mat.snp does not seem to be a matrix in genotype format,\n",
-			"as the names of the rows are missing.")
-	if(any(!mat.snp %in% c(0, 1, 2, NA)))
-		stop("The values in mat.snp must be 0, 1, and 2.")
-	type <- match.arg(model)
-	fastTDT(mat.snp, type, size=size)
-}
 
 colTDT2way <- function(...){
 	cat("colTDT2way has been renamed to colGxG. So please use colGxG instead.\n")

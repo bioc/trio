@@ -1,6 +1,5 @@
 trio.sim <-
 function(freq,  interaction="1R and 2D", prev=1e-3, OR=1, pi.usr=0, n=100, rep=1,  step.save=NULL, step.load=NULL,  verbose=FALSE){
-
   sigType="D/R"
 
   if (prev >= 1 | prev <= 0) stop("Argument, prev, is out of range of (0, 1).")

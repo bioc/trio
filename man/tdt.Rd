@@ -14,7 +14,7 @@ Computes the genotypic TDT for a SNP or for each column of a matrix representing
 \usage{
 tdt(snp, model = c("additive", "dominant", "recessive"))
 
-colTDT(mat.snp, model = c("additive", "dominant", "recessive"), 
+colTDT(mat.snp, matNumber = NULL, model = c("additive", "dominant", "recessive"), 
    size = 50)
 
 \method{print}{tdt}(x, digits = 4, ...)
@@ -32,6 +32,8 @@ colTDT(mat.snp, model = c("additive", "dominant", "recessive"),
 }
   \item{mat.snp}{a numeric matrix in which each column represents a SNP. Each of the SNPs must have the same structure
     as \code{snp}, and can, e.g., be generated from a ped-file by employing \code{\link{ped2geno}}.
+}
+  \item{matNumber}{a numeric matrix containing the numbers of trios showing the different combinations of genotypes of the offsprings and their parents, i.e. the output of \code{\link{colNtrios}} (with unspecified argument \code{env}). Each column of \code{matNumber} corresponds to a genotype combination, and each row to a SNP.
 }
   \item{model}{type of model that should be fitted. Abbreviations are allowed. Thus, e.g., \code{model = "dom"} will
     fit a dominant model, and \code{model = "r"} an recessive model. 
